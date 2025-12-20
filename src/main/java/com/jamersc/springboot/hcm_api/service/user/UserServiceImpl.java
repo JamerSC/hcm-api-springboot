@@ -108,7 +108,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void archiveUser(Long id) {
+    public void archiveUser(Long id, Authentication authentication) {
+        // todo
+    }
 
+    @Override
+    public void unarchivedUser(Long id, Authentication authentication) {
+        // todo
     }
 }

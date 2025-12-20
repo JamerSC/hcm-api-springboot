@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,6 +35,7 @@ public class ApplicantController {
         this.jobService = jobService;
     }
 
+    @PreAuthorize("hasAuthority('VIEW_OPEN_JOBS')")
     @GetMapping("/open/jobs")
     public ResponseEntity<ApiResponse<Page<JobResponseDto>>> getOpenJobs(
             @PageableDefault(page = 0, size = 10, sort = "title") Pageable pageable) {
@@ -48,6 +50,7 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('APPLY_JOBS')")
     @PostMapping("/jobs/{id}/apply")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> applyForJob(
             @PathVariable Long id, Authentication authentication) {
@@ -63,6 +66,7 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_APPLIED_JOBS')")
     @GetMapping("/applications/jobs-applied")
     public ResponseEntity<ApiResponse<Page<ApplicationResponseDto>>> getAllApplicantJobsApplied(
             @PageableDefault(page = 0, size = 10, sort = "status") Pageable pageable,
@@ -80,6 +84,7 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_APPLIED_JOBS')")
     @GetMapping("/application/{id}/view")
     public ResponseEntity<ApiResponse<Optional<ApplicationResponseDto>>> getAppliedJob(
             @PathVariable Long id, Authentication authentication) {
@@ -96,6 +101,7 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('WITHDRAW_APPLIED_JOBS')")
     @PatchMapping("/application/{id}/withdraw")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> withdrawApplication(
             @PathVariable Long id, Authentication authentication) {
@@ -111,8 +117,9 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('MY_APPLICANT_PROFILE')")
     @GetMapping("/me/profile")
-    public ResponseEntity<ApiResponse<ApplicantResponseDto>> getMyApplicantProfile(
+    public ResponseEntity<ApiResponse<ApplicantResponseDto>> myApplicantProfile(
             Authentication authentication) {
         ApplicantResponseDto retrievedProfile = applicantService.getMyApplicantProfile(authentication);
         ApiResponse<ApplicantResponseDto> response = ApiResponse.<ApplicantResponseDto>builder()
@@ -126,6 +133,7 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_APPLICANT_PROFILE')")
     @PutMapping("/update-profile")
     public ResponseEntity<ApiResponse<ApplicantResponseDto>> updateMyApplicantProfile(
             @RequestBody ApplicantProfileDto profileDto,
@@ -142,6 +150,7 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('UPLOAD_RESUME')")
     // Endpoint for CV/Resume upload
     @PostMapping("/profile/upload-resume")
     public ResponseEntity<ApiResponse<ApplicantResponseDto>> uploadResume(
@@ -159,6 +168,7 @@ public class ApplicantController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('DELETE_ACCOUNT')")
     @DeleteMapping("/me")
     public ResponseEntity<ApiResponse<String>> deleteMyAccount(Authentication authentication) {
         applicantService.deleteApplicantAccount(authentication);

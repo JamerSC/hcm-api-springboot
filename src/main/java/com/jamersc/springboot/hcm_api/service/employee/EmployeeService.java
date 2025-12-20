@@ -18,5 +18,6 @@ public interface EmployeeService {
     EmployeeResponseDto createEmployee(EmployeeCreateDto dto, Authentication authentication);
     Employee updateEmployee(EmployeeUpdateDto dto, Authentication authentication);
     EmployeeResponseDto patchEmployee(Long id, EmployeePatchDto dto, Authentication authentication);
-    void deleteEmployee(Long id);
+    void archiveEmployee(Long id, Authentication authentication);
+    EmployeeResponseDto unarchivedEmployee(Long id, Authentication authentication);
 }

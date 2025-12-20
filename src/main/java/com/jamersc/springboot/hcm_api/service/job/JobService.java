@@ -18,7 +18,8 @@ public interface JobService {
     JobResponseDto createJob(JobCreateDto dto, Authentication authentication);
     JobResponseDto openJob(Long id, Authentication authentication);
     JobResponseDto updateJob(Long id, JobPatchDto dto, Authentication authentication);
-    JobResponseDto filledJob(Long id, Authentication authentication);
+    JobResponseDto fillJob(Long id, Authentication authentication);
     JobResponseDto closeJob(Long id, Authentication authentication);
-    void deleteJob(Long id);
+    void archiveJob(Long id, Authentication authentication);
+    void unarchivedJob(Long id, Authentication authentication);
 }

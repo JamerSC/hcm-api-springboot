@@ -45,7 +45,7 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public Optional<LeaveResponseDto> getLeaveRequestById(Long id) {
+    public Optional<LeaveResponseDto> getLeaveRequest(Long id) {
         return Optional.of(leaveRepository.findById(id)
                 .map(leaveMapper::entityToResponseDto))
                 .orElseThrow(()-> new RuntimeException("Leave request not found"));
@@ -59,7 +59,7 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public LeaveResponseDto submitLeaveRequest(LeaveCreateDto dto, Authentication authentication) {
+    public LeaveResponseDto createLeaveRequest(LeaveCreateDto dto, Authentication authentication) {
         User currentUser = getUser(authentication);
 
         Leave leaveRequest = new Leave();
@@ -148,8 +148,13 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public void deleteLeaveRequestById(Long id) {
+    public void archiveLeaveRequest(Long id, Authentication authentication) {
         leaveRepository.deleteById(id);
+    }
+
+    @Override
+    public void unarchivedLeaveRequest(Long id, Authentication authentication) {
+        //
     }
 
     private User getUser(Authentication authentication) {

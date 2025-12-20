@@ -71,7 +71,8 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}/update-user")
+    @PreAuthorize("hasAuthority('UPDATE_USERS')")
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
             @PathVariable Long id, @Valid @RequestBody UserDto dto,
             Authentication authentication) {
@@ -93,10 +94,19 @@ public class UserController {
 //        return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
 //    }
 
-    // Todo soft delete
-    @DeleteMapping("/{id}/delete-user")
-    public String deleteUser(@PathVariable Long id) {
-        userService.archiveUser(id);
-        return "User soft deleted, successfully!";
+    // todo improve validation
+    @PreAuthorize("hasAuthority('ARCHIVE_USERS')")
+    @DeleteMapping("/{id}")
+    public String archiveUser(@PathVariable Long id, Authentication authentication) {
+        userService.archiveUser(id, authentication);
+        return "User archived successfully!";
+    }
+
+    // todo improve validation
+    @PreAuthorize("hasAuthority('ARCHIVE_USERS')")
+    @PatchMapping("/{id}/unarchived")
+    public String unarchivedUser(@PathVariable Long id, Authentication authentication) {
+        userService.unarchivedUser(id, authentication);
+        return "User unarchived successfully!";
     }
 }

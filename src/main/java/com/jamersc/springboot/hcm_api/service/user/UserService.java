@@ -15,5 +15,8 @@ public interface UserService {
     Optional<UserResponseDto> findUser(Long id);
     UserResponseDto createUser(Long employeeId, UserCreateDto createDTO, Authentication authentication);
     UserResponseDto update(UserDto userDTO, Authentication authentication);
-    void archiveUser(Long id);
+    // todo
+    void archiveUser(Long id, Authentication authentication);
+    // todo
+    void unarchivedUser(Long id, Authentication authentication);
 }

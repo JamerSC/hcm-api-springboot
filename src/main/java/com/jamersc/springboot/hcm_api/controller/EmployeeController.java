@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +31,7 @@ public class EmployeeController {
     }
 
 
-    // Get all employees
+    @PreAuthorize("hasAuthority('VIEW_EMPLOYEES')")
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<EmployeeResponseDto>>> getAllEmployees(
             @PageableDefault(page = 0, size = 10, sort = "id") Pageable pageable) {
@@ -45,6 +46,7 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_EMPLOYEES')")
     // Get employee profile with username & role
     @GetMapping("/{id}/profile")
     public ResponseEntity<ApiResponse<Optional<EmployeeProfileDto>>> getEmployeeProfile(@PathVariable Long id) {
@@ -59,6 +61,7 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_EMPLOYEES')")
     // Get employee by id
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Optional<EmployeeResponseDto>>> getEmployee(@PathVariable Long id) {
@@ -73,8 +76,9 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_PROFILE')")
     @GetMapping("/me/profile")
-    public ResponseEntity<ApiResponse<EmployeeProfileDto>> getMyEmployeeProfile(Authentication authentication) {
+    public ResponseEntity<ApiResponse<EmployeeProfileDto>> myEmployeeProfile(Authentication authentication) {
         EmployeeProfileDto retrieveMyProfile = employeeService.getMyEmployeeProfile(authentication);
         ApiResponse<EmployeeProfileDto> response = ApiResponse.<EmployeeProfileDto>builder()
                 .success(true)
@@ -86,7 +90,7 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
-    // Create Employee
+    @PreAuthorize("hasAuthority('CREATE_EMPLOYEES')")
     @PostMapping("/")
     public ResponseEntity<ApiResponse<EmployeeResponseDto>> createEmployee(
             @Valid @RequestBody EmployeeCreateDto dto, Authentication authentication) {
@@ -101,8 +105,9 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_EMPLOYEES')")
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<EmployeeResponseDto>> patchEmployeeProfile(
+    public ResponseEntity<ApiResponse<EmployeeResponseDto>> updateEmployee(
             @PathVariable Long id, @RequestBody EmployeePatchDto dto, Authentication authentication) {
         EmployeeResponseDto patchedEmployee = employeeService.patchEmployee(id, dto, authentication);
         ApiResponse<EmployeeResponseDto> response = ApiResponse.<EmployeeResponseDto>builder()
@@ -130,9 +135,11 @@ public class EmployeeController {
         return objectMapper.convertValue(employeeNode, EmployeeDto.class);
     }
 
-
+    // todo improve validation
+    @PreAuthorize("hasAuthority('ARCHIVE_EMPLOYEES')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<String>> archiveEmployee(
+            @PathVariable Long id, Authentication authentication) {
         Optional<EmployeeDto> tempEmployee = employeeService.findById(id);
 
         if (tempEmployee.isEmpty()) {
@@ -146,12 +153,28 @@ public class EmployeeController {
             return ResponseEntity.ok(response);
         }
 
-        employeeService.deleteEmployee(id);
+        employeeService.archiveEmployee(id, authentication);
         ApiResponse<String> response = ApiResponse.<String>builder()
                 .success(true)
-                .message("Employee deleted successfully!")
+                .message("Employee archived successfully!")
                 .data(null)
                 .status(HttpStatus.NO_CONTENT.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    // todo improve validation
+    @PreAuthorize("hasAuthority('UNARCHIVED_EMPLOYEES')")
+    @PatchMapping("/{id}/unarchived")
+    public ResponseEntity<ApiResponse<EmployeeResponseDto>> unarchivedEmployee(
+            @PathVariable Long id, Authentication authentication) {
+        EmployeeResponseDto unarchivedEmployee = employeeService.unarchivedEmployee(id, authentication);
+        ApiResponse<EmployeeResponseDto> response = ApiResponse.<EmployeeResponseDto>builder()
+                .success(true)
+                .message("Employee unarchived successfully!")
+                .data(unarchivedEmployee)
+                .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
                 .build();
         return ResponseEntity.ok(response);

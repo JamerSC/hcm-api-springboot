@@ -14,5 +14,6 @@ public interface DepartmentService {
     Optional<DepartmentResponseDto> getDepartment(Long id);
     DepartmentResponseDto createDepartment(DepartmentCreateDto dto, Authentication authentication);
     DepartmentResponseDto updateDepartment(Long id, DepartmentPatchDto dto, Authentication authentication);
-    void deleteDepartment(Long id);
+    void archiveDepartment(Long id, Authentication authentication);
+    DepartmentResponseDto unarchivedDepartment(Long id, Authentication authentication);
 }

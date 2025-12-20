@@ -147,10 +147,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public void deleteEmployee(Long id) {
+    public void archiveEmployee(Long id, Authentication authentication) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee not found - " + id));
         employeeRepository.deleteById(id);
+    }
+
+    @Override
+    public EmployeeResponseDto unarchivedEmployee(Long id, Authentication authentication) {
+        return null;
     }
 
     // method for getting the current user - reusability
