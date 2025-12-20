@@ -11,12 +11,14 @@ import java.util.Optional;
 
 public interface LeaveService {
     Page<LeaveResponseDto> getAllLeaveRequest(Pageable pageable);
-    Optional<LeaveResponseDto> getLeaveRequestById(Long id);
+    Optional<LeaveResponseDto> getLeaveRequest(Long id);
     Page<LeaveResponseDto> getMyLeaveRequests(Pageable pageable, Authentication authentication);
-    LeaveResponseDto submitLeaveRequest(LeaveCreateDto dto, Authentication authentication);
+    LeaveResponseDto createLeaveRequest(LeaveCreateDto dto, Authentication authentication);
     LeaveResponseDto cancelLeaveRequest(Long id, Authentication authentication);
     LeaveResponseDto updateLeaveRequest(Long id, LeaveUpdateDto dto, Authentication authentication);
     LeaveResponseDto approveLeaveRequest(Long id, Authentication authentication);
     LeaveResponseDto rejectLeaveRequest(Long id, Authentication authentication);
-    void deleteLeaveRequestById(Long id);
+    void archiveLeaveRequest(Long id, Authentication authentication);
+    void unarchivedLeaveRequest(Long id, Authentication authentication);
+
 }

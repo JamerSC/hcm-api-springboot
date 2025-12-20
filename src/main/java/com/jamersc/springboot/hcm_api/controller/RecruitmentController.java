@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class RecruitmentController {
         this.applicationService = applicationService;
     }
 
+    @PreAuthorize("hasAuthority('VIEW_APPLICANTS')")
     @GetMapping("/applicants")
     public ResponseEntity<ApiResponse<Page<ApplicantResponseDto>>> getAllApplicants(
             @PageableDefault(page = 0, size = 10, sort = "lastName") Pageable pageable) {
@@ -43,6 +45,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_APPLICANTS')")
     @GetMapping("/{id}/applicant")
     public ResponseEntity<ApiResponse<Optional<ApplicantResponseDto>>> getApplicantById(
             @PathVariable Long id) {
@@ -58,6 +61,7 @@ public class RecruitmentController {
     }
 
     /*** APPLICATION **/
+    @PreAuthorize("hasAuthority('VIEW_APPLICATIONS')")
     @GetMapping("/applications")
     public ResponseEntity<ApiResponse<Page<ApplicationResponseDto>>> getAllApplicationsSubmitted(
             @PageableDefault(page = 0, size = 10, sort = "status") Pageable pageable) {
@@ -72,8 +76,9 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_APPLICATIONS')")
     @GetMapping("/{id}/application")
-    public ResponseEntity<ApiResponse<Optional<ApplicationResponseDto>>> getApplicationById(
+    public ResponseEntity<ApiResponse<Optional<ApplicationResponseDto>>> getApplication(
             @PathVariable Long id) {
         Optional<ApplicationResponseDto> retrievedApplication = applicationService.getApplicationById(id);
         ApiResponse<Optional<ApplicationResponseDto>> response = ApiResponse.<Optional<ApplicationResponseDto>>builder()
@@ -86,6 +91,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('UPDATE_APPLICATIONS')")
     @PutMapping("/{id}/update-application")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> updateApplication(
             @PathVariable Long id, @RequestBody ApplicationUpdateDto dto, Authentication authentication) {
@@ -100,6 +106,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('APPROVE_APPLICATIONS')")
     @PatchMapping("/{id}/application/approve")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> approveApplication(
             @PathVariable Long id, Authentication authentication) {
@@ -114,6 +121,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('REJECT_APPLICATIONS')")
     @PatchMapping("/{id}/application/reject")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> rejectApplication(
             @PathVariable Long id, Authentication authentication) {
@@ -128,6 +136,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('INITIAL_QUALIFICATION')")
     @PatchMapping("/{id}/application/initial-qualification")
     public ResponseEntity<ApiResponse<ApplicationResponseDto> > initialQualification(
             @PathVariable Long id, Authentication authentication) {
@@ -142,6 +151,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('FIRST_INTERVIEW')")
     @PatchMapping("/{id}/application/first-interview")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> firstInterview(
             @PathVariable Long id, Authentication authentication) {
@@ -156,6 +166,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('SECOND_INTERVIEW')")
     @PatchMapping("/{id}/application/second-interview")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> secondInterview(
             @PathVariable Long id, Authentication authentication) {
@@ -170,6 +181,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('CONTRACT_PROPOSAL')")
     @PatchMapping("/{id}/application/contract-proposal")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> contractProposal(
             @PathVariable Long id, Authentication authentication) {
@@ -184,6 +196,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('CONTRACT_SIGNED')")
     @PatchMapping("/{id}/application/contract-signed")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> contractSigned(
             @PathVariable Long id, Authentication authentication) {
@@ -198,6 +211,7 @@ public class RecruitmentController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('HIRE_APPLICANTS')")
     @PatchMapping("/{id}/application/hire")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> hireApplicant(
             @PathVariable Long id, Authentication authentication) {

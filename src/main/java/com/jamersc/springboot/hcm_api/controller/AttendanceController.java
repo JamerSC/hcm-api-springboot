@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +27,7 @@ public class AttendanceController {
         this.attendanceService = attendanceService;
     }
 
+    @PreAuthorize("hasAuthority('VIEW_ATTENDANCES')")
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<AttendanceDto>>> getAllAttendances(
             @PageableDefault(page = 0, size = 10, sort = "attendanceDate") Pageable pageable) {
@@ -40,8 +42,9 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_MY_ATTENDANCES')")
     @GetMapping("/me/profile")
-    public ResponseEntity<ApiResponse<Page<AttendanceResponseDto>>> getMyAttendances(
+    public ResponseEntity<ApiResponse<Page<AttendanceResponseDto>>> myAttendances(
             @PageableDefault(page = 0, size = 10, sort = "attendanceDate") Pageable pageable,
             Authentication authentication)
     {
@@ -57,7 +60,7 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
-
+    @PreAuthorize("hasAuthority('CHECK_IN_ATTENDANCES')")
     @PostMapping("/check-in")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> attendanceCheckIn(Authentication authentication) {
         AttendanceResponseDto checkedInAttendance = attendanceService
@@ -72,6 +75,7 @@ public class AttendanceController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('CHECK_OUT_ATTENDANCES')")
     @PatchMapping("/check-out")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> attendanceCheckOut(Authentication authentication) {
         AttendanceResponseDto checkedOutAttendance = attendanceService

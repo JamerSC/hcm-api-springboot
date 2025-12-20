@@ -125,7 +125,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public JobResponseDto filledJob(Long id, Authentication authentication) {
+    public JobResponseDto fillJob(Long id, Authentication authentication) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Job not found"));
 
@@ -156,10 +156,16 @@ public class JobServiceImpl implements JobService {
         return jobMapper.entityToJobResponseDto(openJob);
     }
 
-
+    // todo improve validation
     @Override
-    public void deleteJob(Long id) {
-        jobRepository.deleteById(id);
+    public void archiveJob(Long id, Authentication authentication) {
+//        jobRepository.deleteById(id);
+    }
+
+    // todo improve validation
+    @Override
+    public void unarchivedJob(Long id, Authentication authentication) {
+        //
     }
 
     private User getUser(Authentication authentication) {

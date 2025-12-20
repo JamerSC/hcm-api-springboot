@@ -95,8 +95,15 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departmentMapper.entityToDepartmentResponseDto(patchedDepartment);
     }
 
+    // todo improve validation
     @Override
-    public void deleteDepartment(Long id) {
-        departmentRepository.deleteById(id);
+    public void archiveDepartment(Long id, Authentication authentication) {
+        //departmentRepository.deleteById(id);
+    }
+
+    // todo improve validation
+    @Override
+    public DepartmentResponseDto unarchivedDepartment(Long id, Authentication authentication) {
+        return null;
     }
 }

@@ -1,6 +1,5 @@
 package com.jamersc.springboot.hcm_api.controller;
 
-import com.jamersc.springboot.hcm_api.dto.attendance.AttendanceDto;
 import com.jamersc.springboot.hcm_api.dto.leave.LeaveCreateDto;
 import com.jamersc.springboot.hcm_api.dto.leave.LeaveResponseDto;
 import com.jamersc.springboot.hcm_api.dto.leave.LeaveUpdateDto;
@@ -12,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +28,7 @@ public class LeaveController {
         this.leaveService = leaveService;
     }
 
+    @PreAuthorize("hasAuthority('VIEW_LEAVES')")
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<LeaveResponseDto>>> getAllLeaveRequests(
             @PageableDefault(page = 0, size = 10, sort="submittedAt") Pageable pageable) {
@@ -42,24 +43,12 @@ public class LeaveController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Optional<LeaveResponseDto>>> getLeaveRequestsById(@PathVariable Long id) {
-        Optional<LeaveResponseDto> retrievedLeaveRequest = leaveService.getLeaveRequestById(id);
-        ApiResponse<Optional<LeaveResponseDto>> response = ApiResponse.<Optional<LeaveResponseDto>>builder()
-                .success(true)
-                .message("Leave request retrieved successfully!")
-                .data(retrievedLeaveRequest)
-                .status(HttpStatus.OK.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
-    }
-
+    @PreAuthorize("hasAuthority('CREATE_LEAVES')")
     @PostMapping("/submit")
-    public ResponseEntity<ApiResponse<LeaveResponseDto>> submitLeaveRequest(
+    public ResponseEntity<ApiResponse<LeaveResponseDto>> createLeaveRequest(
             @Valid @RequestBody LeaveCreateDto createDTO,
             Authentication authentication) {
-        LeaveResponseDto submittedLeaveRequest = leaveService.submitLeaveRequest(createDTO, authentication);
+        LeaveResponseDto submittedLeaveRequest = leaveService.createLeaveRequest(createDTO, authentication);
         ApiResponse<LeaveResponseDto> response = ApiResponse.<LeaveResponseDto>builder()
                 .success(true)
                 .message("Leave request submitted successfully!")
@@ -70,6 +59,21 @@ public class LeaveController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_LEAVES')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Optional<LeaveResponseDto>>> getLeaveRequest(@PathVariable Long id) {
+        Optional<LeaveResponseDto> retrievedLeaveRequest = leaveService.getLeaveRequest(id);
+        ApiResponse<Optional<LeaveResponseDto>> response = ApiResponse.<Optional<LeaveResponseDto>>builder()
+                .success(true)
+                .message("Leave request retrieved successfully!")
+                .data(retrievedLeaveRequest)
+                .status(HttpStatus.OK.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasAuthority('CANCEL_LEAVES')")
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<LeaveResponseDto>> cancelLeaveRequest(
             @PathVariable Long id, Authentication authentication) {
@@ -84,10 +88,14 @@ public class LeaveController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_MY_LEAVES')")
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<Page<LeaveResponseDto>>> getMyLeaveRequests(
-            @PageableDefault(page = 0, size = 10, sort="submittedAt") Pageable pageable, Authentication authentication) {
-        Page<LeaveResponseDto> myRequestedLeaves = leaveService.getMyLeaveRequests(pageable, authentication);
+    public ResponseEntity<ApiResponse<Page<LeaveResponseDto>>> myLeaveRequests(
+            @PageableDefault(page = 0, size = 10, sort="submittedAt") Pageable pageable,
+            Authentication authentication
+    ) {
+        Page<LeaveResponseDto> myRequestedLeaves = leaveService
+                                             .getMyLeaveRequests(pageable, authentication);
         ApiResponse<Page<LeaveResponseDto>> response = ApiResponse.<Page<LeaveResponseDto>>builder()
                 .success(true)
                 .message("My leave request retrieved successfully!")
@@ -97,7 +105,7 @@ public class LeaveController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
+    @PreAuthorize("hasAuthority('UPDATE_LEAVES')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<LeaveResponseDto> > updateLeaveRequest(
             @PathVariable Long id, @Valid @RequestBody LeaveUpdateDto dto,
@@ -113,6 +121,7 @@ public class LeaveController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('APPROVE_LEAVES')")
     @PatchMapping("/{id}/approve-leave")
     public ResponseEntity<ApiResponse<LeaveResponseDto>> approveLeaveRequest(
             @PathVariable Long id, Authentication authentication) {
@@ -127,6 +136,7 @@ public class LeaveController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('REJECT_LEAVES')")
     @PatchMapping("/{id}/reject-leave")
     public ResponseEntity<ApiResponse<LeaveResponseDto>> rejectLeaveRequest(
             @PathVariable Long id, Authentication authentication) {
@@ -141,9 +151,12 @@ public class LeaveController {
         return ResponseEntity.ok(response);
     }
 
+    // todo improve validation
+    @PreAuthorize("hasAuthority('ARCHIVE_LEAVES')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteLeaveRequestById(@PathVariable Long id) {
-        Optional<LeaveResponseDto> tempLeaveRequest = leaveService.getLeaveRequestById(id);
+    public ResponseEntity<ApiResponse<String>> archiveLeaveRequest(
+            @PathVariable Long id, Authentication authentication) {
+        Optional<LeaveResponseDto> tempLeaveRequest = leaveService.getLeaveRequest(id);
 
         if (tempLeaveRequest.isEmpty()) {
             ApiResponse<String> response = ApiResponse.<String>builder()
@@ -156,15 +169,23 @@ public class LeaveController {
             return ResponseEntity.ok(response);
         }
 
-        leaveService.deleteLeaveRequestById(id);
+        leaveService.archiveLeaveRequest(id, authentication);
 
         ApiResponse<String> response = ApiResponse.<String>builder()
                 .success(true)
-                .message("Leave request deleted successfully!")
+                .message("Leave request archived successfully!")
                 .data(null)
                 .status(HttpStatus.NO_CONTENT.value())
                 .timestamp(LocalDateTime.now())
                 .build();
         return ResponseEntity.ok(response);
+    }
+
+    // todo improve validation
+    @PreAuthorize("hasAuthority('UNARCHIVED_LEAVES')")
+    @PatchMapping("/{id}/unarchived")
+    public String unarchivedLeaveRequest(@PathVariable Long id, Authentication authentication) {
+        leaveService.unarchivedLeaveRequest(id, authentication);
+        return "Leave request unarchived successfully!";
     }
 }
