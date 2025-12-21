@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Getter
@@ -22,10 +23,14 @@ public class EmployeeResponseDto {
     private String department;
     private LocalDate hiredDate;
     private String salary;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime createdAt;
+
     private String createdBy;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime updatedAt;
+
     private String updatedBy;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date updatedAt;
 }

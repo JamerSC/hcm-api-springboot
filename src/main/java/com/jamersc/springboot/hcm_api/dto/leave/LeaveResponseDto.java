@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Getter
@@ -23,7 +24,9 @@ public class LeaveResponseDto {
     private LocalDate endDate;
     private String reason;
     private LeaveStatus status;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date submittedAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime submittedAt;
+
     private String approvedBy;
 }

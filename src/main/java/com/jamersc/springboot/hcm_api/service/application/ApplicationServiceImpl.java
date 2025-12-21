@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -82,7 +83,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 4. Set updater info
         application.setUpdatedBy(currentUser);
-        application.setUpdatedAt(new Date());
+        application.setUpdatedAt(OffsetDateTime.now());
 
         // 5. Save updated entity
         Application updatedApplication = applicationRepository.save(application);

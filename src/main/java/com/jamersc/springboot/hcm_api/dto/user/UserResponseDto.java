@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Getter
@@ -17,10 +18,14 @@ public class UserResponseDto {
     private String email;
     private String firstName;
     private String lastName;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime createdAt;
+
     private String createdBy;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime updatedAt;
+
     private String updatedBy;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date updatedAt;
 }

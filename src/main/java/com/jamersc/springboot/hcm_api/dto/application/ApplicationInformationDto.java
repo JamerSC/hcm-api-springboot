@@ -3,6 +3,7 @@ package com.jamersc.springboot.hcm_api.dto.application;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jamersc.springboot.hcm_api.entity.ApplicationStatus;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,11 +26,8 @@ public class ApplicationInformationDto {
     // Application Info
     private final ApplicationStatus status = ApplicationStatus.NEW;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date appliedAt;
-
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date updatedAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime appliedAt;
 
     // Contract / Offer Info
     private Double expectedSalary;
@@ -43,6 +41,13 @@ public class ApplicationInformationDto {
     private String skills;
     private final Set<String> employees = new HashSet<>();
 
-    // Audit Info
-    private String updatedByUsername;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime createdAt;
+
+    private String createdBy;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime updatedAt;
+
+    private String updatedBy;
 }

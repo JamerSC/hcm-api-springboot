@@ -5,7 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,15 +36,9 @@ public class Application {
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status = ApplicationStatus.NEW;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date appliedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updated_by_user_id", referencedColumnName = "id")
-    private User updatedBy;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime appliedAt;
 
     // Null Values - Recruiter or TA will populate this
     // other subject information
@@ -60,17 +57,19 @@ public class Application {
     private String applicationSummary;
     private String skills; // it should be a cms of skills
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id", referencedColumnName = "id")
+    private User createdBy;
 
-    @PrePersist
-    protected void onCreate() {
-        appliedAt = new Date();
-        updatedAt = new Date();
-    }
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime updatedAt;
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = new Date();
-    }
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by_user_id", referencedColumnName = "id")
+    private User updatedBy;
 }

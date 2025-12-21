@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Getter
@@ -20,6 +21,7 @@ public class ApplicationResponseDto {
     private String appliedPosition;
     private String description;
     private ApplicationStatus status;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Manila")
-    private Date appliedAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime appliedAt;
 }

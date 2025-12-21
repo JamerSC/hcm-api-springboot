@@ -1,5 +1,6 @@
 package com.jamersc.springboot.hcm_api.dto.leave;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.jamersc.springboot.hcm_api.entity.Employee;
 import com.jamersc.springboot.hcm_api.entity.LeaveStatus;
 import com.jamersc.springboot.hcm_api.entity.LeaveType;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 @Getter
@@ -24,6 +26,9 @@ public class LeaveDto {
     private LocalDate endDate;
     private String reason;
     private LeaveStatus status;
-    private Date submittedAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
+    private OffsetDateTime submittedAt;
+
     private User approvedBy;
 }
