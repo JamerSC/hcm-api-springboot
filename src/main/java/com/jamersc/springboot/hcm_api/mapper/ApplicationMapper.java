@@ -15,7 +15,8 @@ import java.util.List;
 public interface ApplicationMapper {
 
     @Mapping(target = "jobDescription", source = "job.description")
-    @Mapping(target = "updatedByUsername", source = "updatedBy.username")
+    @Mapping(target = "createdBy", source = "createdBy.username")
+    @Mapping(target = "updatedBy", source = "updatedBy.username")
     @Mapping(target = "jobPosition", source = "job.title")
     @Mapping(target = "applicantName", source = "applicant.firstName")
     ApplicationDto entityToDto(Application application);
@@ -33,6 +34,7 @@ public interface ApplicationMapper {
     @Mapping(target = "availability", ignore = true)
     @Mapping(target = "applicationSummary", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "job", ignore = true)
     @Mapping(target = "applicant", ignore = true)
     Application dtoToEntity(ApplicationDto dto);
@@ -44,6 +46,8 @@ public interface ApplicationMapper {
     @Mapping(target = "applicantName", source = "applicant.applicantFullName")
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     ApplicationUpdateDto entityToUpdateDto(Application application);
 
     @Mapping(target = "job", ignore = true)
@@ -51,6 +55,8 @@ public interface ApplicationMapper {
     @Mapping(target = "applicant", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     Application updateDtoToEntity(ApplicationUpdateDto dto);
 
     @Mapping(target = "applicationId", source = "id")
@@ -59,6 +65,8 @@ public interface ApplicationMapper {
     @Mapping(target = "applicantName", source = "applicant.applicantFullName")
     ApplicationResponseDto entityToApplicationResponseDto(Application application);
 
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "source", ignore = true)
     @Mapping(target = "skills", ignore = true)
     @Mapping(target = "proposedSalary", ignore = true)

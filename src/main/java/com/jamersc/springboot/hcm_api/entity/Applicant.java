@@ -5,8 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "applicants")
@@ -29,31 +31,21 @@ public class Applicant {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user; // Link to the User account
 
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id", referencedColumnName = "id")
     private User createdBy;
 
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private OffsetDateTime updatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by_user_id", referencedColumnName = "id")
     private User updatedBy;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date createdAt;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = new Date();
-        updatedAt = new Date();
-    }
-
-    // Add JPA annotations for createdDate and modifiedDate
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = new Date();
-    }
 
     public String getApplicantFullName() {
         return this.firstName + " " + this.lastName;

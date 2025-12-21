@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Service
 @Transactional
@@ -69,7 +70,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         Attendance newAttendance = new Attendance();
         newAttendance.setEmployee(currentUser.getEmployee());
         newAttendance.setAttendanceDate(LocalDate.now());
-        newAttendance.setCheckInTime(LocalDateTime.now());
+        newAttendance.setCheckInTime(OffsetDateTime.now());
 
         return attendanceMapper.entityToResponseDto(attendanceRepository.save(newAttendance));
     }
@@ -87,7 +88,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new RuntimeException("Employee has already checked out today");
         }
 
-        attendance.setCheckOutTime(LocalDateTime.now());
+        attendance.setCheckOutTime(OffsetDateTime.now());
 
         return attendanceMapper.entityToResponseDto(attendanceRepository.save(attendance));
     }

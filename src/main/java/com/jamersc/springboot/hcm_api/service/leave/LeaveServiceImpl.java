@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -69,7 +70,7 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setEndDate(dto.getEndDate());
         leaveRequest.setReason(dto.getReason());
         leaveRequest.setStatus(LeaveStatus.SUBMITTED);
-        leaveRequest.setSubmittedAt(new Date());
+        leaveRequest.setSubmittedAt(OffsetDateTime.now());
         leaveRequest.setCreatedBy(currentUser);
         leaveRequest.setUpdatedBy(currentUser);
 
@@ -107,7 +108,7 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setEndDate(dto.getEndDate());
         leaveRequest.setReason(dto.getReason());
         leaveRequest.setUpdatedBy(currentUser);
-        leaveRequest.setUpdatedAt(new Date());
+        leaveRequest.setUpdatedAt(OffsetDateTime.now());
 
         // 4. Save updated entity
         Leave updated = leaveRepository.save(leaveRequest);
