@@ -4,18 +4,22 @@ import com.jamersc.springboot.hcm_api.dto.job.JobCreateDto;
 import com.jamersc.springboot.hcm_api.dto.job.JobDto;
 import com.jamersc.springboot.hcm_api.dto.job.JobPatchDto;
 import com.jamersc.springboot.hcm_api.dto.job.JobResponseDto;
+import com.jamersc.springboot.hcm_api.entity.JobStatus;
 import com.jamersc.springboot.hcm_api.service.job.JobService;
 import com.jamersc.springboot.hcm_api.utils.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -32,8 +36,22 @@ public class JobController {
     @PreAuthorize("hasAuthority('VIEW_JOBS')")
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<JobDto>>> getAllJobs(
-            @PageableDefault(page = 0, size = 10, sort = "title") Pageable pageable) {
-        Page<JobDto> retrievedJobs = jobService.getAllJob(pageable);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) JobStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable)
+    {
+        Page<JobDto> retrievedJobs = jobService.getAllJob(
+                search,
+                departmentId,
+                status,
+                dateFrom,
+                dateTo,
+                pageable
+        );
+
         ApiResponse<Page<JobDto>> response = ApiResponse.<Page<JobDto>>builder()
                 .success(true)
                 .message("List of jobs retrieved successfully!")

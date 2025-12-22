@@ -11,6 +11,7 @@ import com.jamersc.springboot.hcm_api.entity.User;
 import com.jamersc.springboot.hcm_api.mapper.JobMapper;
 import com.jamersc.springboot.hcm_api.repository.DepartmentRepository;
 import com.jamersc.springboot.hcm_api.repository.JobRepository;
+import com.jamersc.springboot.hcm_api.repository.JobSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import com.jamersc.springboot.hcm_api.service.user.UserServiceImpl;
 import jakarta.transaction.Transactional;
@@ -18,10 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -42,16 +45,52 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public Page<JobDto> getAllJob(Pageable pageable) {
-        Page<Job> jobs = jobRepository.findAll(pageable);
+    public Page<JobDto> getAllJob(
+            String search,
+            Long departmentId,
+            JobStatus status,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+        log.debug("Fetching open jobs with filters - Search: {}, department id {}, job status {},  date from {}, date to {}",
+                search, departmentId, status, dateFrom, dateTo
+        );
+        Specification<Job> spec = JobSpecification.getJobs(
+                search, departmentId, status, dateFrom, dateTo
+        );
+        Page<Job> jobs = jobRepository.findAll(spec, pageable);
         return jobs.map(jobMapper::entityToJobDto);
     }
 
+//    @Override
+//    public Page<JobDto> getAllJob(Pageable pageable) {
+//        Page<Job> jobs = jobRepository.findAll(pageable);
+//        return jobs.map(jobMapper::entityToJobDto);
+//    }
+
     @Override
-    public Page<JobResponseDto> getOpenJobs(Pageable pageable) {
-        Page<Job> openJobs = jobRepository.findByStatus(pageable, JobStatus.OPEN);
+    public Page<JobResponseDto> getOpenJobs(
+            String search,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+        log.debug("Fetching open jobs with filters - Search: {}, date from {}, date to {}",
+                search, dateFrom, dateTo
+        );
+        Specification<Job> spec = JobSpecification.getOpenJobs(
+                search, dateFrom, dateTo
+        );
+        Page<Job> openJobs = jobRepository.findAll(spec, pageable);
         return openJobs.map(jobMapper::entityToJobResponseDto);
     }
+
+//    @Override
+//    public Page<JobResponseDto> getOpenJobs(Pageable pageable) {
+//        Page<Job> openJobs = jobRepository.findByStatus(pageable, JobStatus.OPEN);
+//        return openJobs.map(jobMapper::entityToJobResponseDto);
+//    }
 
     @Override
     public Optional<JobResponseDto> getJob(Long id) {

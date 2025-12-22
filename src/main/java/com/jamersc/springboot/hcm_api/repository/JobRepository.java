@@ -17,5 +17,5 @@ public interface JobRepository extends JpaRepository<Job, Long>,
 
 //    @Query("SELECT j FROM Job j WHERE j.status IN ('OPEN','CLOSED')")
 //    @Query("SELECT j FROM Job j WHERE j.status = 'OPEN'")
-//    List<Job> findJobsWithStatusOpen();
+//    List<Job> findJobsWithStatusOpen();,
 }
