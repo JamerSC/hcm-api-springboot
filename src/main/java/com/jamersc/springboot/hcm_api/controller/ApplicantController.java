@@ -10,7 +10,9 @@ import com.jamersc.springboot.hcm_api.utils.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -38,8 +41,18 @@ public class ApplicantController {
     @PreAuthorize("hasAuthority('VIEW_OPEN_JOBS')")
     @GetMapping("/open/jobs")
     public ResponseEntity<ApiResponse<Page<JobResponseDto>>> getOpenJobs(
-            @PageableDefault(page = 0, size = 10, sort = "title") Pageable pageable) {
-        Page<JobResponseDto> retrievedOpenJobs = jobService.getOpenJobs(pageable);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @PageableDefault(page = 0, size = 10, sort = "postedDate", direction = Sort.Direction.DESC) Pageable pageable)
+    {
+        Page<JobResponseDto> retrievedOpenJobs = jobService.getOpenJobs(
+                search,
+                dateFrom,
+                dateTo,
+                pageable
+        );
+
         ApiResponse<Page<JobResponseDto>> response = ApiResponse.<Page<JobResponseDto>>builder()
                 .success(true)
                 .message("List of open jobs retrieved successfully!")
