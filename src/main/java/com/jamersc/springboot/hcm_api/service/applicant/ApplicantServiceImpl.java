@@ -51,7 +51,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     }
 
     @Override
-    public Page<ApplicantResponseDto> getAllApplicant(Pageable pageable) {
+    public Page<ApplicantResponseDto> getAllApplicants(Pageable pageable) {
         // fetch applicant from repository
         Page<Applicant> applicants = applicantRepository.findAll(pageable);
         // map the Page<Applicant> to Page<JobDto>
@@ -59,7 +59,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     }
 
     @Override
-    public Optional<ApplicantResponseDto> getApplicantById(Long id) {
+    public Optional<ApplicantResponseDto> getApplicant(Long id) {
 
         return Optional.ofNullable(applicantRepository.findById(id)
                 .map(applicantMapper::entityToResponseDto)
@@ -114,7 +114,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     }
 
     @Override
-    public ApplicationResponseDto applyForJob(Long id, Authentication authentication) {
+    public ApplicationResponseDto apply(Long id, Authentication authentication) {
         // find the job
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
@@ -165,7 +165,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     }
 
     @Override
-    public Optional<ApplicationResponseDto> getApplicantJobsAppliedById(Long id, Authentication authentication) {
+    public Optional<ApplicationResponseDto> getApplicantJobsApplied(Long id, Authentication authentication) {
         // find the application
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Application not found"));

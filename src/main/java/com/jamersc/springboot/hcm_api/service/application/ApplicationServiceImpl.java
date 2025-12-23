@@ -46,7 +46,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 //    }
 
     @Override
-    public Page<ApplicationResponseDto> getAllApplication(Pageable pageable) {
+    public Page<ApplicationResponseDto> getAllApplications(Pageable pageable) {
         // fetch application
         Page<Application> applications = applicationRepository.findAll(pageable);
         // map application entity page to page dto
@@ -54,7 +54,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public Optional<ApplicationResponseDto> getApplicationById(Long id) {
+    public Optional<ApplicationResponseDto> getApplication(Long id) {
         return Optional.ofNullable(applicationRepository.findById(id)
                 .map(applicationMapper::entityToApplicationResponseDto)
                 .orElseThrow(()-> new RuntimeException("Application not found")));

@@ -12,14 +12,14 @@ import java.util.Optional;
 
 public interface ApplicantService {
 
-    Page<ApplicantResponseDto> getAllApplicant(Pageable pageable); // for admin/hr role
-    Optional<ApplicantResponseDto> getApplicantById(Long id); // for admin/hr role
+    Page<ApplicantResponseDto> getAllApplicants(Pageable pageable); // for admin/hr role
+    Optional<ApplicantResponseDto> getApplicant(Long id); // for admin/hr role
     ApplicantResponseDto getMyApplicantProfile(Authentication authentication);
     ApplicantResponseDto updateMyApplicantProfile(ApplicantProfileDto profileDto, Authentication authentication);
     ApplicantResponseDto uploadResume(MultipartFile file, Authentication authentication);
-    ApplicationResponseDto applyForJob(Long id, Authentication authentication);
+    ApplicationResponseDto apply(Long id, Authentication authentication);
     Page<ApplicationResponseDto> getAllApplicantJobsApplied(Pageable pageable, Authentication authentication);
-    Optional<ApplicationResponseDto> getApplicantJobsAppliedById(Long id, Authentication authentication);
+    Optional<ApplicationResponseDto> getApplicantJobsApplied(Long id, Authentication authentication);
     ApplicationResponseDto withdrawApplication(Long id, Authentication authentication);
     void deleteApplicantAccount(Authentication authentication);
 }

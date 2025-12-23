@@ -17,8 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,8 +42,8 @@ public class ApplicantController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
-            @PageableDefault(page = 0, size = 10, sort = "postedDate", direction = Sort.Direction.DESC) Pageable pageable)
-    {
+            @PageableDefault(page = 0, size = 10, sort = "postedDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
         Page<JobResponseDto> retrievedOpenJobs = jobService.getOpenJobs(
                 search,
                 dateFrom,
@@ -67,7 +65,7 @@ public class ApplicantController {
     @PostMapping("/jobs/{id}/apply")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> applyForJob(
             @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto applicationSubmitted = applicantService.applyForJob(id, authentication);
+        ApplicationResponseDto applicationSubmitted = applicantService.apply(id, authentication);
         ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Job application submitted successfully!")
@@ -102,7 +100,7 @@ public class ApplicantController {
     public ResponseEntity<ApiResponse<Optional<ApplicationResponseDto>>> getAppliedJob(
             @PathVariable Long id, Authentication authentication) {
         Optional<ApplicationResponseDto> appliedJob = applicantService
-                .getApplicantJobsAppliedById(id, authentication);
+                .getApplicantJobsApplied(id, authentication);
         ApiResponse<Optional<ApplicationResponseDto>> response = ApiResponse.<Optional<ApplicationResponseDto>>builder()
                 .success(true)
                 .message("Job application retrieved successfully!")

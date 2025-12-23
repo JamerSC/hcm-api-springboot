@@ -9,8 +9,8 @@ import org.springframework.security.core.Authentication;
 import java.util.Optional;
 
 public interface ApplicationService {
-    Page<ApplicationResponseDto> getAllApplication(Pageable pageable);
-    Optional<ApplicationResponseDto> getApplicationById(Long id);
+    Page<ApplicationResponseDto> getAllApplications(Pageable pageable);
+    Optional<ApplicationResponseDto> getApplication(Long id);
     ApplicationResponseDto updateApplicationInformation(Long id, ApplicationUpdateDto dto, Authentication authentication);
     ApplicationResponseDto initialQualification(Long id, Authentication authentication);
     ApplicationResponseDto firstInterview(Long id, Authentication authentication);

@@ -3,18 +3,23 @@ package com.jamersc.springboot.hcm_api.controller;
 import com.jamersc.springboot.hcm_api.dto.leave.LeaveCreateDto;
 import com.jamersc.springboot.hcm_api.dto.leave.LeaveResponseDto;
 import com.jamersc.springboot.hcm_api.dto.leave.LeaveUpdateDto;
+import com.jamersc.springboot.hcm_api.entity.LeaveStatus;
+import com.jamersc.springboot.hcm_api.entity.LeaveType;
 import com.jamersc.springboot.hcm_api.service.leave.LeaveService;
 import com.jamersc.springboot.hcm_api.utils.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -31,7 +36,13 @@ public class LeaveController {
     @PreAuthorize("hasAuthority('VIEW_LEAVES')")
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<LeaveResponseDto>>> getAllLeaveRequests(
-            @PageableDefault(page = 0, size = 10, sort="submittedAt") Pageable pageable) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) LeaveType leaveType,
+            @RequestParam(required = false) LeaveStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
         Page<LeaveResponseDto> retrievedLeaveRequests = leaveService.getAllLeaveRequest(pageable);
         ApiResponse<Page<LeaveResponseDto>> response = ApiResponse.<Page<LeaveResponseDto>>builder()
                 .success(true)
@@ -91,7 +102,12 @@ public class LeaveController {
     @PreAuthorize("hasAuthority('VIEW_MY_LEAVES')")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Page<LeaveResponseDto>>> myLeaveRequests(
-            @PageableDefault(page = 0, size = 10, sort="submittedAt") Pageable pageable,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) LeaveType leaveType,
+            @RequestParam(required = false) LeaveStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication
     ) {
         Page<LeaveResponseDto> myRequestedLeaves = leaveService
