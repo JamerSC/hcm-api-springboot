@@ -24,27 +24,27 @@ public class JobSpecification {
             LocalDate dateFrom,
             LocalDate dateTo
     ) {
-        return (root, query, criteriaBuilder) -> {
+        return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // 1. Search Logic (Title or Description)
             if (StringUtils.hasText(search)) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
-                Predicate titlePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), searchPattern);
-                Predicate descPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern);
-                Predicate descLocation = criteriaBuilder.like(criteriaBuilder.lower(root.get("location")), searchPattern);
-                predicates.add(criteriaBuilder.or(titlePredicate, descPredicate, descLocation));
+                Predicate titlePredicate = cb.like(cb.lower(root.get("title")), searchPattern);
+                Predicate descPredicate = cb.like(cb.lower(root.get("description")), searchPattern);
+                Predicate descLocation = cb.like(cb.lower(root.get("location")), searchPattern);
+                predicates.add(cb.or(titlePredicate, descPredicate, descLocation));
             }
 
             // 2. Department Filter (Relationship Join)
             if (departmentId != null) {
                 // "department" matches the field name in Job entity: private Department department;
                 // "id" matches the field name in Department entity: private Long id;
-                predicates.add(criteriaBuilder.equal(root.get("department").get("id"), departmentId));
+                predicates.add(cb.equal(root.get("department").get("id"), departmentId));
             }
 
             if (status != null) {
-                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+                predicates.add(cb.equal(root.get("status"), status));
             }
 
             if (dateFrom != null) {
@@ -53,7 +53,7 @@ public class JobSpecification {
                                 .atOffset(ZoneOffset.UTC);
 
                 predicates.add(
-                        criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDateTime)
+                        cb.greaterThanOrEqualTo(root.get("createdAt"), startDateTime)
                 );
             }
 
@@ -64,11 +64,11 @@ public class JobSpecification {
                                 .atOffset(ZoneOffset.UTC);
 
                 predicates.add(
-                        criteriaBuilder.lessThan(root.get("createdAt"), endDateTime)
+                        cb.lessThan(root.get("createdAt"), endDateTime)
                 );
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
@@ -80,27 +80,27 @@ public class JobSpecification {
             LocalDate dateFrom,
             LocalDate dateTo
     ) {
-        return (root, query, criteriaBuilder) -> {
+        return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(
-                    criteriaBuilder.equal(root.get("status"), JobStatus.OPEN)
+                    cb.equal(root.get("status"), JobStatus.OPEN)
             );
 
 
             // 1. Search Logic (Title or Description)
             if (StringUtils.hasText(search)) {
                 String searchPattern = "%" + search.toLowerCase() + "%";
-                Predicate titlePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), searchPattern);
-                Predicate descPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), searchPattern);
-                Predicate descLocation = criteriaBuilder.like(criteriaBuilder.lower(root.get("location")), searchPattern);
-                predicates.add(criteriaBuilder.or(titlePredicate, descPredicate, descLocation));
+                Predicate titlePredicate = cb.like(cb.lower(root.get("title")), searchPattern);
+                Predicate descPredicate = cb.like(cb.lower(root.get("description")), searchPattern);
+                Predicate descLocation = cb.like(cb.lower(root.get("location")), searchPattern);
+                predicates.add(cb.or(titlePredicate, descPredicate, descLocation));
             }
 
             if (dateFrom != null) {
                 predicates.add(
-                        criteriaBuilder.greaterThanOrEqualTo(
-                                criteriaBuilder.function(
+                        cb.greaterThanOrEqualTo(
+                                cb.function(
                                         "date",
                                         LocalDate.class,
                                         root.get("postedDate") // OffsetDateTime column
@@ -112,8 +112,8 @@ public class JobSpecification {
 
             if (dateTo != null) {
                 predicates.add(
-                        criteriaBuilder.lessThanOrEqualTo(
-                                criteriaBuilder.function(
+                        cb.lessThanOrEqualTo(
+                                cb.function(
                                         "date",
                                         LocalDate.class,
                                         root.get("postedDate")
@@ -123,7 +123,7 @@ public class JobSpecification {
                 );
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }

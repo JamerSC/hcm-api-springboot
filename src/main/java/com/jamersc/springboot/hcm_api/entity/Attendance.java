@@ -33,6 +33,8 @@ public class Attendance {
 
     private OffsetDateTime checkInTime;
     private OffsetDateTime checkOutTime;
+
+    @Enumerated(EnumType.STRING)
     private AttendanceStatus status;
 
     @CreationTimestamp

@@ -3,19 +3,22 @@ package com.jamersc.springboot.hcm_api.controller;
 import com.jamersc.springboot.hcm_api.dto.applicant.ApplicantResponseDto;
 import com.jamersc.springboot.hcm_api.dto.application.ApplicationResponseDto;
 import com.jamersc.springboot.hcm_api.dto.application.ApplicationUpdateDto;
-import com.jamersc.springboot.hcm_api.dto.leave.LeaveResponseDto;
+import com.jamersc.springboot.hcm_api.entity.ApplicationStatus;
 import com.jamersc.springboot.hcm_api.service.applicant.ApplicantService;
 import com.jamersc.springboot.hcm_api.service.application.ApplicationService;
 import com.jamersc.springboot.hcm_api.utils.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -33,8 +36,12 @@ public class RecruitmentController {
     @PreAuthorize("hasAuthority('VIEW_APPLICANTS')")
     @GetMapping("/applicants")
     public ResponseEntity<ApiResponse<Page<ApplicantResponseDto>>> getAllApplicants(
-            @PageableDefault(page = 0, size = 10, sort = "lastName") Pageable pageable) {
-        Page<ApplicantResponseDto> retrievedApplicants = applicantService.getAllApplicant(pageable);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<ApplicantResponseDto> retrievedApplicants = applicantService.getAllApplicants(pageable);
         ApiResponse<Page<ApplicantResponseDto>> response = ApiResponse.<Page<ApplicantResponseDto>>builder()
                 .success(true)
                 .message("List of applicants retrieved successfully!")
@@ -47,9 +54,9 @@ public class RecruitmentController {
 
     @PreAuthorize("hasAuthority('VIEW_APPLICANTS')")
     @GetMapping("/{id}/applicant")
-    public ResponseEntity<ApiResponse<Optional<ApplicantResponseDto>>> getApplicantById(
+    public ResponseEntity<ApiResponse<Optional<ApplicantResponseDto>>> getApplicant(
             @PathVariable Long id) {
-        Optional<ApplicantResponseDto> retrievedApplicant = applicantService.getApplicantById(id);
+        Optional<ApplicantResponseDto> retrievedApplicant = applicantService.getApplicant(id);
         ApiResponse<Optional<ApplicantResponseDto>> response = ApiResponse.<Optional<ApplicantResponseDto>>builder()
                 .success(true)
                 .message("Applicant retrieved successfully!")
@@ -63,12 +70,19 @@ public class RecruitmentController {
     /*** APPLICATION **/
     @PreAuthorize("hasAuthority('VIEW_APPLICATIONS')")
     @GetMapping("/applications")
-    public ResponseEntity<ApiResponse<Page<ApplicationResponseDto>>> getAllApplicationsSubmitted(
-            @PageableDefault(page = 0, size = 10, sort = "status") Pageable pageable) {
-        Page<ApplicationResponseDto> retrievedSubmittedApplications = applicationService.getAllApplication(pageable);
+    public ResponseEntity<ApiResponse<Page<ApplicationResponseDto>>> getAllApplications(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) ApplicationStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<ApplicationResponseDto> retrievedSubmittedApplications = applicationService.getAllApplications(
+                pageable
+        );
         ApiResponse<Page<ApplicationResponseDto>> response = ApiResponse.<Page<ApplicationResponseDto>>builder()
                 .success(true)
-                .message("List of submitted applications retrieved successfully!")
+                .message("List of applications retrieved successfully!")
                 .data(retrievedSubmittedApplications)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
@@ -80,7 +94,7 @@ public class RecruitmentController {
     @GetMapping("/{id}/application")
     public ResponseEntity<ApiResponse<Optional<ApplicationResponseDto>>> getApplication(
             @PathVariable Long id) {
-        Optional<ApplicationResponseDto> retrievedApplication = applicationService.getApplicationById(id);
+        Optional<ApplicationResponseDto> retrievedApplication = applicationService.getApplication(id);
         ApiResponse<Optional<ApplicationResponseDto>> response = ApiResponse.<Optional<ApplicationResponseDto>>builder()
                 .success(true)
                 .message("Application retrieved successfully!")
