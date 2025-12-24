@@ -8,11 +8,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface ApplicantService {
 
-    Page<ApplicantResponseDto> getAllApplicants(Pageable pageable); // for admin/hr role
+    Page<ApplicantResponseDto> getAllApplicants(
+            String search,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ); // for admin/hr role
     Optional<ApplicantResponseDto> getApplicant(Long id); // for admin/hr role
     ApplicantResponseDto getMyApplicantProfile(Authentication authentication);
     ApplicantResponseDto updateMyApplicantProfile(ApplicantProfileDto profileDto, Authentication authentication);

@@ -6,10 +6,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface EmployeeService {
-    Page<EmployeeResponseDto> getAllEmployee(Pageable pageable);
+    Page<EmployeeResponseDto> getAllEmployees(
+            String search,
+            Long jobId,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    );
     //EmployeeDto findById(Long id);
     Optional<EmployeeProfileDto> getEmployeeProfile(Long id);
     Optional<EmployeeResponseDto> getEmployee(Long id);

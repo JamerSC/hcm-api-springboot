@@ -7,16 +7,19 @@ import com.jamersc.springboot.hcm_api.entity.Department;
 import com.jamersc.springboot.hcm_api.entity.User;
 import com.jamersc.springboot.hcm_api.mapper.DepartmentMapper;
 import com.jamersc.springboot.hcm_api.repository.DepartmentRepository;
+import com.jamersc.springboot.hcm_api.repository.DepartmentSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -34,12 +37,35 @@ public class DepartmentServiceImpl implements DepartmentService {
         this.userRepository = userRepository;
     }
 
-
     @Override
-    public Page<DepartmentResponseDto> getAllDepartments(Pageable pageable) {
-        Page<Department> departments = departmentRepository.findAll(pageable);
+    public Page<DepartmentResponseDto> getAllDepartments(
+            String search,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+        log.debug("Fetching departments with filters - Search: {}, date from {}, date to {}",
+                search,
+                dateFrom,
+                dateTo
+        );
+
+        Specification<Department> spec = Specification.allOf(
+                DepartmentSpecification.search(search),
+                DepartmentSpecification.dateRange(dateFrom, dateTo)
+        );
+
+        Page<Department> departments = departmentRepository.findAll(spec, pageable);
+
         return departments.map(departmentMapper::entityToDepartmentResponseDto);
     }
+
+
+//    @Override
+//    public Page<DepartmentResponseDto> getAllDepartments(Pageable pageable) {
+//        Page<Department> departments = departmentRepository.findAll(pageable);
+//        return departments.map(departmentMapper::entityToDepartmentResponseDto);
+//    }
 
     @Override
     public Optional<DepartmentResponseDto> getDepartment(Long id) {

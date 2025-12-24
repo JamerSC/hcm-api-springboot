@@ -44,6 +44,9 @@ public class JobServiceImpl implements JobService {
         this.departmentRepository = departmentRepository;
     }
 
+    /**
+     * For Admin/Manager
+     */
     @Override
     public Page<JobDto> getAllJob(
             String search,
@@ -53,13 +56,19 @@ public class JobServiceImpl implements JobService {
             LocalDate dateTo,
             Pageable pageable
     ) {
-        log.debug("Fetching open jobs with filters - Search: {}, department id {}, job status {},  date from {}, date to {}",
+        log.debug("Fetching all jobs with filters - Search: {}, department id {}, job status {},  date from {}, date to {}",
                 search, departmentId, status, dateFrom, dateTo
         );
-        Specification<Job> spec = JobSpecification.getJobs(
-                search, departmentId, status, dateFrom, dateTo
+
+        Specification<Job> spec = Specification.allOf(
+                JobSpecification.search(search),
+                JobSpecification.hasDepartment(departmentId),
+                JobSpecification.hasStatus(status),
+                JobSpecification.dateRange(dateFrom, dateTo)
         );
+
         Page<Job> jobs = jobRepository.findAll(spec, pageable);
+
         return jobs.map(jobMapper::entityToJobDto);
     }
 
@@ -69,6 +78,9 @@ public class JobServiceImpl implements JobService {
 //        return jobs.map(jobMapper::entityToJobDto);
 //    }
 
+    /**
+     * For Applicant
+     */
     @Override
     public Page<JobResponseDto> getOpenJobs(
             String search,
@@ -79,8 +91,10 @@ public class JobServiceImpl implements JobService {
         log.debug("Fetching open jobs with filters - Search: {}, date from {}, date to {}",
                 search, dateFrom, dateTo
         );
-        Specification<Job> spec = JobSpecification.getOpenJobs(
-                search, dateFrom, dateTo
+        Specification<Job> spec = Specification.allOf(
+                JobSpecification.hasStatusOpen(),
+                JobSpecification.search(search),
+                JobSpecification.dateRange(dateFrom, dateTo)
         );
         Page<Job> openJobs = jobRepository.findAll(spec, pageable);
         return openJobs.map(jobMapper::entityToJobResponseDto);

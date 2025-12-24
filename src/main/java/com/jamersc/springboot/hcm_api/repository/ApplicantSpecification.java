@@ -1,4 +1,72 @@
 package com.jamersc.springboot.hcm_api.repository;
 
+import com.jamersc.springboot.hcm_api.entity.Applicant;
+import com.jamersc.springboot.hcm_api.entity.Employee;
+import com.jamersc.springboot.hcm_api.entity.Job;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ApplicantSpecification {
+
+    // ✅ Composable Specifications (best practice)
+
+    /* ===================== SEARCH ===================== */
+    public static Specification<Applicant> search(String search) {
+        return (root, query, cb) -> {
+            if (!StringUtils.hasText(search)) {
+                return cb.conjunction();
+            }
+
+            String pattern = "%" + search.toLowerCase() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("firstName")), pattern),
+                    cb.like(cb.lower(root.get("lastName")), pattern)
+            );
+        };
+    }
+
+    /* ===================== DATE RANGE ===================== */
+    public static Specification<Applicant> dateRange(
+            LocalDate dateFrom,
+            LocalDate dateTo
+    ) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (dateFrom != null) {
+                OffsetDateTime start =
+                        dateFrom.atStartOfDay()
+                                .atOffset(ZoneOffset.UTC);
+
+                predicates.add(
+                        cb.greaterThanOrEqualTo(
+                                root.get("createdAt"), start
+                        ));
+            }
+
+            if (dateTo != null) {
+                OffsetDateTime end =
+                        dateTo.plusDays(1)
+                                .atStartOfDay()
+                                .atOffset(ZoneOffset.UTC);
+
+                predicates.add(
+                        cb.lessThan(
+                                root.get("createdAt"), end
+                        ));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
 }

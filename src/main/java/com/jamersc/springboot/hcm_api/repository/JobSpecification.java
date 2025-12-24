@@ -1,7 +1,10 @@
 package com.jamersc.springboot.hcm_api.repository;
 
+import com.jamersc.springboot.hcm_api.entity.Department;
 import com.jamersc.springboot.hcm_api.entity.Job;
 import com.jamersc.springboot.hcm_api.entity.JobStatus;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
@@ -14,113 +17,84 @@ import java.util.List;
 
 public class JobSpecification {
 
-    /**
-     * For Manager/Admin
-     */
-    public static Specification<Job> getJobs(
-            String search,
-            Long departmentId,
-            JobStatus status,
+    // ✅ Composable Specifications (best practice)
+
+    /* ===================== SEARCH ===================== */
+    public static Specification<Job> search(String search) {
+        return (root, query, cb) -> {
+            if (!StringUtils.hasText(search)) {
+                return cb.conjunction();
+            }
+
+            String pattern = "%" + search.toLowerCase() + "%";
+            Join<Job, Department> departmentJoin = root.join("department", JoinType.LEFT);
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), pattern),
+                    cb.like(cb.lower(root.get("description")), pattern),
+                    cb.like(cb.lower(root.get("location")), pattern),
+                    cb.like(cb.lower(departmentJoin.get("name")), pattern)
+            );
+        };
+    }
+
+    /* ===================== DEPARTMENT ===================== */
+    public static Specification<Job> hasDepartment(Long departmentId) {
+        //explicit and avoid implicit joins (useful in complex queries)
+        return (root, query, cb) -> {
+          if (departmentId == null) {
+              return cb.conjunction();
+          }
+
+          Join<Job, Department> departmentJoin = root.join("department", JoinType.LEFT);
+
+          return cb.equal(departmentJoin.get("id"), departmentId);
+        };
+    }
+
+    /* ===================== STATUS ===================== */
+    public static Specification<Job> hasStatus(JobStatus status) {
+        return (root, query, cb) ->
+                status == null
+                        ? cb.conjunction()
+                        : cb.equal(root.get("status"), status);
+    }
+
+    /* ===================== STATUS - OPEN - FOR APPLICANT ===================== */
+    public static Specification<Job> hasStatusOpen() {
+        return (root, query, cb) ->
+                cb.equal(root.get("status"), JobStatus.OPEN);
+    }
+
+    /* ===================== DATE RANGE ===================== */
+    public static Specification<Job> dateRange(
             LocalDate dateFrom,
             LocalDate dateTo
     ) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // 1. Search Logic (Title or Description)
-            if (StringUtils.hasText(search)) {
-                String searchPattern = "%" + search.toLowerCase() + "%";
-                Predicate titlePredicate = cb.like(cb.lower(root.get("title")), searchPattern);
-                Predicate descPredicate = cb.like(cb.lower(root.get("description")), searchPattern);
-                Predicate descLocation = cb.like(cb.lower(root.get("location")), searchPattern);
-                predicates.add(cb.or(titlePredicate, descPredicate, descLocation));
-            }
-
-            // 2. Department Filter (Relationship Join)
-            if (departmentId != null) {
-                // "department" matches the field name in Job entity: private Department department;
-                // "id" matches the field name in Department entity: private Long id;
-                predicates.add(cb.equal(root.get("department").get("id"), departmentId));
-            }
-
-            if (status != null) {
-                predicates.add(cb.equal(root.get("status"), status));
-            }
-
             if (dateFrom != null) {
-                OffsetDateTime startDateTime =
+                OffsetDateTime start =
                         dateFrom.atStartOfDay()
                                 .atOffset(ZoneOffset.UTC);
 
                 predicates.add(
-                        cb.greaterThanOrEqualTo(root.get("createdAt"), startDateTime)
-                );
+                        cb.greaterThanOrEqualTo(
+                                root.get("createdAt"), start
+                        ));
             }
 
             if (dateTo != null) {
-                OffsetDateTime endDateTime =
+                OffsetDateTime end =
                         dateTo.plusDays(1)
                                 .atStartOfDay()
                                 .atOffset(ZoneOffset.UTC);
 
                 predicates.add(
-                        cb.lessThan(root.get("createdAt"), endDateTime)
-                );
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    /**
-     * For Applicants
-     */
-    public static Specification<Job> getOpenJobs(
-            String search,
-            LocalDate dateFrom,
-            LocalDate dateTo
-    ) {
-        return (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            predicates.add(
-                    cb.equal(root.get("status"), JobStatus.OPEN)
-            );
-
-
-            // 1. Search Logic (Title or Description)
-            if (StringUtils.hasText(search)) {
-                String searchPattern = "%" + search.toLowerCase() + "%";
-                Predicate titlePredicate = cb.like(cb.lower(root.get("title")), searchPattern);
-                Predicate descPredicate = cb.like(cb.lower(root.get("description")), searchPattern);
-                Predicate descLocation = cb.like(cb.lower(root.get("location")), searchPattern);
-                predicates.add(cb.or(titlePredicate, descPredicate, descLocation));
-            }
-
-            if (dateFrom != null) {
-                predicates.add(
-                        cb.greaterThanOrEqualTo(
-                                cb.function(
-                                        "date",
-                                        LocalDate.class,
-                                        root.get("postedDate") // OffsetDateTime column
-                                ),
-                                dateFrom
-                        )
-                );
-            }
-
-            if (dateTo != null) {
-                predicates.add(
-                        cb.lessThanOrEqualTo(
-                                cb.function(
-                                        "date",
-                                        LocalDate.class,
-                                        root.get("postedDate")
-                                ),
-                                dateTo
-                        )
-                );
+                        cb.lessThan(
+                                root.get("createdAt"), end
+                        ));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

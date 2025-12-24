@@ -17,6 +17,8 @@ import java.util.List;
 
 public class AttendanceSpecification {
 
+    // ✅ Composable Specifications (best practice)
+
     /* ===================== SEARCH ===================== */
     public static Specification<Attendance> search(String search) {
         return (root, query, cb) -> {
