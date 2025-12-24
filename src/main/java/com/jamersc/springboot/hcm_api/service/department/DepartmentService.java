@@ -7,10 +7,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface DepartmentService {
-    Page<DepartmentResponseDto> getAllDepartments(Pageable pageable);
+    Page<DepartmentResponseDto> getAllDepartments(
+            String search,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    );
     Optional<DepartmentResponseDto> getDepartment(Long id);
     DepartmentResponseDto createDepartment(DepartmentCreateDto dto, Authentication authentication);
     DepartmentResponseDto updateDepartment(Long id, DepartmentPatchDto dto, Authentication authentication);

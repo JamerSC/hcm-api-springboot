@@ -41,7 +41,12 @@ public class RecruitmentController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ApplicantResponseDto> retrievedApplicants = applicantService.getAllApplicants(pageable);
+        Page<ApplicantResponseDto> retrievedApplicants = applicantService.getAllApplicants(
+                search,
+                dateFrom,
+                dateTo,
+                pageable
+        );
         ApiResponse<Page<ApplicantResponseDto>> response = ApiResponse.<Page<ApplicantResponseDto>>builder()
                 .success(true)
                 .message("List of applicants retrieved successfully!")

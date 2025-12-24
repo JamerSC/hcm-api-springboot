@@ -7,6 +7,7 @@ import com.jamersc.springboot.hcm_api.exception.EmployeeNotFoundException;
 import com.jamersc.springboot.hcm_api.entity.Employee;
 import com.jamersc.springboot.hcm_api.mapper.EmployeeMapper;
 import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
+import com.jamersc.springboot.hcm_api.repository.EmployeeSpecification;
 import com.jamersc.springboot.hcm_api.repository.JobRepository;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -14,10 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -37,12 +40,35 @@ public class EmployeeServiceImpl implements EmployeeService {
         this.jobRepository = jobRepository;
     }
 
-
     @Override
-    public Page<EmployeeResponseDto> getAllEmployee(Pageable pageable) {
-        Page<Employee> employees = employeeRepository.findAll(pageable);
+    public Page<EmployeeResponseDto> getAllEmployees(
+            String search,
+            Long jobId,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+
+        log.debug("Fetching employees with filters - Search: {}, job id {}, date from {}, date to {}",
+                search, jobId, dateFrom, dateTo
+        );
+
+        Specification<Employee> spec = Specification.allOf(
+                EmployeeSpecification.search(search),
+                EmployeeSpecification.hasJob(jobId),
+                EmployeeSpecification.dateRange(dateFrom, dateTo)
+        );
+
+        Page<Employee> employees = employeeRepository.findAll(spec, pageable);
+
         return employees.map(employeeMapper::entityToEmployeeResponseDTO);
     }
+
+//    @Override
+//    public Page<EmployeeResponseDto> getAllEmployee(Pageable pageable) {
+//        Page<Employee> employees = employeeRepository.findAll(pageable);
+//        return employees.map(employeeMapper::entityToEmployeeResponseDTO);
+//    }
 
     @Override
     public Optional<EmployeeProfileDto> getEmployeeProfile(Long id) {

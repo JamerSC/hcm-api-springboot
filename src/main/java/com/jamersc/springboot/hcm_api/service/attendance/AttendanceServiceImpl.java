@@ -47,7 +47,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             LocalDate dateTo,
             Pageable pageable
     ) {
-        log.debug("Fetching case accounts filters: search={}, status={}, attendance date from {}, attendance date to {}, pageable={}",
+        log.debug("Fetching all attendances filters: search={}, status={}, attendance date from {}, attendance date to {}, pageable={}",
                 search, status, dateFrom, dateTo, pageable);
 
         Specification<Attendance> spec =
@@ -79,7 +79,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             Authentication authentication
     ) {
         User currentUser = getUser(authentication);
-        log.debug("Fetching case accounts filters: currentUser={}, search={}, status={}, attendance date from {}, attendance date to {}, pageable={}",
+        log.debug("Fetching my attendances filters: currentUser={}, search={}, status={}, attendance date from {}, attendance date to {}, pageable={}",
                 currentUser.getEmployee(), search, status, dateFrom, dateTo, pageable);
 
         Specification<Attendance> spec =

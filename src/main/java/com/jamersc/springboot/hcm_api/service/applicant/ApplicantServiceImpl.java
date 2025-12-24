@@ -6,10 +6,7 @@ import com.jamersc.springboot.hcm_api.dto.application.ApplicationResponseDto;
 import com.jamersc.springboot.hcm_api.entity.*;
 import com.jamersc.springboot.hcm_api.mapper.ApplicantMapper;
 import com.jamersc.springboot.hcm_api.mapper.ApplicationMapper;
-import com.jamersc.springboot.hcm_api.repository.ApplicantRepository;
-import com.jamersc.springboot.hcm_api.repository.ApplicationRepository;
-import com.jamersc.springboot.hcm_api.repository.JobRepository;
-import com.jamersc.springboot.hcm_api.repository.UserRepository;
+import com.jamersc.springboot.hcm_api.repository.*;
 import com.jamersc.springboot.hcm_api.service.email.EmailService;
 import com.jamersc.springboot.hcm_api.service.file.FileStorageService;
 import jakarta.transaction.Transactional;
@@ -17,11 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,12 +50,34 @@ public class ApplicantServiceImpl implements ApplicantService {
     }
 
     @Override
-    public Page<ApplicantResponseDto> getAllApplicants(Pageable pageable) {
+    public Page<ApplicantResponseDto> getAllApplicants(
+            String search,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+
+        log.debug("Fetching all applicants filters: search={}, created date from {}, date to {}, pageable={}",
+                search, dateFrom, dateTo, pageable
+        );
+
+        Specification<Applicant> spec = Specification.allOf(
+                ApplicantSpecification.search(search),
+                ApplicantSpecification.dateRange(dateFrom, dateTo)
+        );
         // fetch applicant from repository
-        Page<Applicant> applicants = applicantRepository.findAll(pageable);
+        Page<Applicant> applicants = applicantRepository.findAll(spec, pageable);
         // map the Page<Applicant> to Page<JobDto>
         return applicants.map(applicantMapper::entityToResponseDto);
     }
+
+//    @Override
+//    public Page<ApplicantResponseDto> getAllApplicants(Pageable pageable) {
+//        // fetch applicant from repository
+//        Page<Applicant> applicants = applicantRepository.findAll(pageable);
+//        // map the Page<Applicant> to Page<JobDto>
+//        return applicants.map(applicantMapper::entityToResponseDto);
+//    }
 
     @Override
     public Optional<ApplicantResponseDto> getApplicant(Long id) {

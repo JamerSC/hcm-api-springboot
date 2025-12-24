@@ -28,18 +28,24 @@ public class DepartmentController {
     private final DepartmentService departmentService;
 
     public DepartmentController(DepartmentService departmentService) {
+        System.out.println(">>> DepartmentController constructor called");
         this.departmentService = departmentService;
     }
 
     @PreAuthorize("hasAuthority('VIEW_DEPARTMENTS')")
     @GetMapping("/")
-    private ResponseEntity<ApiResponse<Page<DepartmentResponseDto>>> getAllDepartments(
+    public ResponseEntity<ApiResponse<Page<DepartmentResponseDto>>> getAllDepartments(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<DepartmentResponseDto> retrievedDepartments = departmentService.getAllDepartments(pageable);
+        Page<DepartmentResponseDto> retrievedDepartments = departmentService.getAllDepartments(
+                search,
+                dateFrom,
+                dateTo,
+                pageable
+        );
         ApiResponse<Page<DepartmentResponseDto>> response = ApiResponse.<Page<DepartmentResponseDto>>builder()
                 .success(true)
                 .message("List of departments retrieved successfully!")

@@ -3,8 +3,6 @@ package com.jamersc.springboot.hcm_api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jamersc.springboot.hcm_api.dto.employee.*;
-import com.jamersc.springboot.hcm_api.entity.LeaveStatus;
-import com.jamersc.springboot.hcm_api.entity.LeaveType;
 import com.jamersc.springboot.hcm_api.service.employee.EmployeeService;
 import com.jamersc.springboot.hcm_api.utils.ApiResponse;
 import jakarta.validation.Valid;
@@ -40,11 +38,18 @@ public class EmployeeController {
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<EmployeeResponseDto>>> getAllEmployees(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long jobId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<EmployeeResponseDto> retrievedEmployees = employeeService.getAllEmployee(pageable);
+        Page<EmployeeResponseDto> retrievedEmployees = employeeService.getAllEmployees(
+                search,
+                jobId,
+                dateFrom,
+                dateTo,
+                pageable
+        );
         ApiResponse<Page<EmployeeResponseDto>> response = ApiResponse.<Page<EmployeeResponseDto>>builder()
                 .success(true)
                 .message("List of employees retrieved successfully!")
