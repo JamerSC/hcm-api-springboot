@@ -35,11 +35,18 @@ public class UserController {
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<UserResponseDto>>> getAllUsers(
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<UserResponseDto> retrievedUsers = userService.getAllUsers(pageable);
+        Page<UserResponseDto> retrievedUsers = userService.getAllUsers(
+                search,
+                active,
+                dateFrom,
+                dateTo,
+                pageable
+        );
         ApiResponse<Page<UserResponseDto>> response = ApiResponse.<Page<UserResponseDto>>builder()
                 .success(true)
                 .message("List of users retrieved successfully!")

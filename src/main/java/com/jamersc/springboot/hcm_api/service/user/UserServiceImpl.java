@@ -10,16 +10,19 @@ import com.jamersc.springboot.hcm_api.mapper.UserMapper;
 import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
 import com.jamersc.springboot.hcm_api.repository.RoleRepository;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
+import com.jamersc.springboot.hcm_api.repository.UserSpecification;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -43,10 +46,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
-        Page<User> users = userRepository.findAll(pageable);
+    public Page<UserResponseDto> getAllUsers(
+            String search,
+            Boolean active,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+        log.debug("Fetching all users filters: search={}, active {}, created date from {}, date to {}, pageable={}",
+                search, active, dateFrom, dateTo, pageable);
+
+        Specification<User> spec = Specification.allOf(
+                UserSpecification.search(search),
+                UserSpecification.isActive(active),
+                UserSpecification.dateRange(dateFrom, dateTo)
+        );
+
+        Page<User> users = userRepository.findAll(spec, pageable);
+
         return users.map(userMapper::entityToUserResponseDTO);
     }
+
+//    @Override
+//    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
+//        Page<User> users = userRepository.findAll(pageable);
+//        return users.map(userMapper::entityToUserResponseDTO);
+//    }
 
     @Override
     public Optional<UserResponseDto> findUser(Long id) {

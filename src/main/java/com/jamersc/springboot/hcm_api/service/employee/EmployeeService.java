@@ -20,7 +20,7 @@ public interface EmployeeService {
     //EmployeeDto findById(Long id);
     Optional<EmployeeProfileDto> getEmployeeProfile(Long id);
     Optional<EmployeeResponseDto> getEmployee(Long id);
-    Optional<EmployeeDto> findById(Long id);
+    Optional<EmployeeDto> findByEmployee(Long id);
     EmployeeProfileDto getMyEmployeeProfile(Authentication authentication);
     EmployeeResponseDto createEmployee(EmployeeCreateDto dto, Authentication authentication);
     Employee updateEmployee(EmployeeUpdateDto dto, Authentication authentication);

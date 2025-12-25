@@ -7,11 +7,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 public interface UserService {
 
-    Page<UserResponseDto> getAllUsers(Pageable pageable);
+    Page<UserResponseDto> getAllUsers(
+            String search,
+            Boolean active,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    );
     Optional<UserResponseDto> findUser(Long id);
     UserResponseDto createUser(Long employeeId, UserCreateDto createDTO, Authentication authentication);
     UserResponseDto update(UserDto userDTO, Authentication authentication);

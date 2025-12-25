@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -46,12 +47,35 @@ public class ApplicationServiceImpl implements ApplicationService {
 //    }
 
     @Override
-    public Page<ApplicationResponseDto> getAllApplications(Pageable pageable) {
-        // fetch application
-        Page<Application> applications = applicationRepository.findAll(pageable);
+    public Page<ApplicationResponseDto> getAllApplications(
+            String search,
+            ApplicationStatus status,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+        log.debug("Fetching all applications filters: search={}, status={}, created date from {}, attendance date to {}, pageable={}",
+                search, status, dateFrom, dateTo, pageable);
+
+        Specification<Application> spec = Specification.allOf(
+                ApplicationSpecification.search(search),
+                ApplicationSpecification.hasStatus(status),
+                ApplicationSpecification.dateRange(dateFrom, dateTo)
+        );
+
+        Page<Application> applications = applicationRepository.findAll(spec, pageable);
         // map application entity page to page dto
         return applications.map(applicationMapper::entityToApplicationResponseDto);
     }
+
+
+//    @Override
+//    public Page<ApplicationResponseDto> getAllApplications(Pageable pageable) {
+//        // fetch application
+//        Page<Application> applications = applicationRepository.findAll(pageable);
+//        // map application entity page to page dto
+//        return applications.map(applicationMapper::entityToApplicationResponseDto);
+//    }
 
     @Override
     public Optional<ApplicationResponseDto> getApplication(Long id) {
