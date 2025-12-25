@@ -85,7 +85,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         );
     }
 
-    public Optional<EmployeeDto> findById(Long id) {
+    public Optional<EmployeeDto> findByEmployee(Long id) {
         return Optional.ofNullable(employeeRepository.findById(id)
                 .map(employeeMapper::entityToDto).orElseThrow(
                         () -> new EmployeeNotFoundException("Employee id not found - " + id))

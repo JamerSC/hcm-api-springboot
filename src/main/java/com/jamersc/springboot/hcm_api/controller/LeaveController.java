@@ -38,12 +38,19 @@ public class LeaveController {
     public ResponseEntity<ApiResponse<Page<LeaveResponseDto>>> getAllLeaveRequests(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) LeaveType leaveType,
-            @RequestParam(required = false) LeaveStatus status,
+            @RequestParam(required = false) LeaveStatus leaveStatus,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<LeaveResponseDto> retrievedLeaveRequests = leaveService.getAllLeaveRequest(pageable);
+        Page<LeaveResponseDto> retrievedLeaveRequests = leaveService.getAllLeaveRequest(
+                search,
+                leaveType,
+                leaveStatus,
+                dateFrom,
+                dateTo,
+                pageable
+        );
         ApiResponse<Page<LeaveResponseDto>> response = ApiResponse.<Page<LeaveResponseDto>>builder()
                 .success(true)
                 .message("List of leave request retrieved successfully!")
@@ -104,14 +111,21 @@ public class LeaveController {
     public ResponseEntity<ApiResponse<Page<LeaveResponseDto>>> myLeaveRequests(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) LeaveType leaveType,
-            @RequestParam(required = false) LeaveStatus status,
+            @RequestParam(required = false) LeaveStatus leaveStatus,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Authentication authentication
     ) {
-        Page<LeaveResponseDto> myRequestedLeaves = leaveService
-                                             .getMyLeaveRequests(pageable, authentication);
+        Page<LeaveResponseDto> myRequestedLeaves = leaveService.getMyLeaveRequests(
+                search,
+                leaveType,
+                leaveStatus,
+                dateFrom,
+                dateTo,
+                pageable,
+                authentication
+        );
         ApiResponse<Page<LeaveResponseDto>> response = ApiResponse.<Page<LeaveResponseDto>>builder()
                 .success(true)
                 .message("My leave request retrieved successfully!")

@@ -83,6 +83,10 @@ public class RecruitmentController {
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<ApplicationResponseDto> retrievedSubmittedApplications = applicationService.getAllApplications(
+                search,
+                status,
+                dateFrom,
+                dateTo,
                 pageable
         );
         ApiResponse<Page<ApplicationResponseDto>> response = ApiResponse.<Page<ApplicationResponseDto>>builder()

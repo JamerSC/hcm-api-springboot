@@ -5,20 +5,24 @@ import com.jamersc.springboot.hcm_api.dto.leave.LeaveResponseDto;
 import com.jamersc.springboot.hcm_api.dto.leave.LeaveUpdateDto;
 import com.jamersc.springboot.hcm_api.entity.Leave;
 import com.jamersc.springboot.hcm_api.entity.LeaveStatus;
+import com.jamersc.springboot.hcm_api.entity.LeaveType;
 import com.jamersc.springboot.hcm_api.entity.User;
 import com.jamersc.springboot.hcm_api.mapper.LeaveMapper;
 import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
 import com.jamersc.springboot.hcm_api.repository.LeaveRepository;
+import com.jamersc.springboot.hcm_api.repository.LeaveSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Optional;
@@ -40,10 +44,35 @@ public class LeaveServiceImpl implements LeaveService {
 
 
     @Override
-    public Page<LeaveResponseDto> getAllLeaveRequest(Pageable pageable) {
-        Page<Leave> leaves = leaveRepository.findAll(pageable);
+    public Page<LeaveResponseDto> getAllLeaveRequest(
+            String search,
+            LeaveType leaveType,
+            LeaveStatus leaveStatus,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable
+    ) {
+        log.debug("Fetching all leave filters: search={}, leave type {}, leave status={}, leave date from {}, leave date to {}, pageable={}",
+                search, leaveType, leaveStatus, dateFrom, dateTo, pageable
+        );
+
+        Specification<Leave> spec = Specification.allOf(
+                LeaveSpecification.search(search),
+                LeaveSpecification.hasType(leaveType),
+                LeaveSpecification.hasStatus(leaveStatus),
+                LeaveSpecification.dateRange(dateFrom, dateTo)
+        );
+
+        Page<Leave> leaves = leaveRepository.findAll(spec, pageable);
+
         return leaves.map(leaveMapper::entityToResponseDto);
     }
+
+//    @Override
+//    public Page<LeaveResponseDto> getAllLeaveRequest(Pageable pageable) {
+//        Page<Leave> leaves = leaveRepository.findAll(pageable);
+//        return leaves.map(leaveMapper::entityToResponseDto);
+//    }
 
     @Override
     public Optional<LeaveResponseDto> getLeaveRequest(Long id) {
@@ -53,11 +82,39 @@ public class LeaveServiceImpl implements LeaveService {
     }
 
     @Override
-    public Page<LeaveResponseDto> getMyLeaveRequests(Pageable pageable, Authentication authentication) {
+    public Page<LeaveResponseDto> getMyLeaveRequests(
+            String search,
+            LeaveType leaveType,
+            LeaveStatus leaveStatus,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            Pageable pageable,
+            Authentication authentication
+    ) {
         User currentUser = getUser(authentication);
-        Page<Leave> myLeaveRequests = leaveRepository.findByEmployee(pageable, currentUser.getEmployee());
+
+        log.debug("Fetching all leave filters: current user {}, search={}, leave type {}, leave status={}, leave date from {}, leave date to {}, pageable={}",
+                currentUser, search, leaveType, leaveStatus, dateFrom, dateTo, pageable
+        );
+
+        Specification<Leave> spec = Specification.allOf(
+                LeaveSpecification.byEmployee(currentUser.getEmployee()),
+                LeaveSpecification.search(search),
+                LeaveSpecification.hasType(leaveType),
+                LeaveSpecification.hasStatus(leaveStatus),
+                LeaveSpecification.dateRange(dateFrom, dateTo)
+        );
+
+        Page<Leave> myLeaveRequests = leaveRepository.findAll(spec, pageable);
         return myLeaveRequests.map(leaveMapper::entityToResponseDto);
     }
+
+//    @Override
+//    public Page<LeaveResponseDto> getMyLeaveRequests(Pageable pageable, Authentication authentication) {
+//        User currentUser = getUser(authentication);
+//        Page<Leave> myLeaveRequests = leaveRepository.findByEmployee(pageable, currentUser.getEmployee());
+//        return myLeaveRequests.map(leaveMapper::entityToResponseDto);
+//    }
 
     @Override
     public LeaveResponseDto createLeaveRequest(LeaveCreateDto dto, Authentication authentication) {

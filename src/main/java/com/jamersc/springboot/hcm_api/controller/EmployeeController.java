@@ -154,7 +154,7 @@ public class EmployeeController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> archiveEmployee(
             @PathVariable Long id, Authentication authentication) {
-        Optional<EmployeeDto> tempEmployee = employeeService.findById(id);
+        Optional<EmployeeDto> tempEmployee = employeeService.findByEmployee(id);
 
         if (tempEmployee.isEmpty()) {
             ApiResponse<String> response = ApiResponse.<String>builder()
