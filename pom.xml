@@ -33,6 +33,12 @@
 		<org.jwt.version>0.11.5</org.jwt.version>
 	</properties>
 	<dependencies>
+	<!-- encrypt & decrypt-->
+		<dependency>
+			<groupId>org.hashids</groupId>
+			<artifactId>hashids</artifactId>
+			<version>1.0.3</version>
+		</dependency>
 		<!-- Sending an email -->
 		<!-- https://mailtrap.io/blog/spring-send-email/ -->
 		<dependency>
