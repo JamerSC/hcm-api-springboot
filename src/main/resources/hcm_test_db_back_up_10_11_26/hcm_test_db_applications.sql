@@ -1,0 +1,80 @@
+CREATE DATABASE  IF NOT EXISTS `hcm_test_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `hcm_test_db`;
+-- MySQL dump 10.13  Distrib 8.0.31, for macos12 (x86_64)
+--
+-- Host: 127.0.0.1    Database: hcm_test_db
+-- ------------------------------------------------------
+-- Server version	8.0.26
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `applications`
+--
+
+DROP TABLE IF EXISTS `applications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `applications` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `applied_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `status` enum('NEW','HIRED','INITIAL_QUALIFICATION','FIRST_INTERVIEW','SECOND_INTERVIEW','CONTRACT_PROPOSAL','CONTRACT_SIGNED','APPROVED','REJECTED','WITHDRAWN') DEFAULT NULL,
+  `updated_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `applicant_id` bigint NOT NULL,
+  `job_id` bigint NOT NULL,
+  `updated_by_user_id` bigint DEFAULT NULL,
+  `application_summary` varchar(255) DEFAULT NULL,
+  `availability` datetime(6) DEFAULT NULL,
+  `degree` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `employees` varbinary(255) DEFAULT NULL,
+  `expected_salary` double DEFAULT NULL,
+  `linked_in_profile` varchar(255) DEFAULT NULL,
+  `mobile` varchar(255) DEFAULT NULL,
+  `phone` varchar(255) DEFAULT NULL,
+  `proposed_salary` double DEFAULT NULL,
+  `skills` varchar(255) DEFAULT NULL,
+  `source` varchar(255) DEFAULT NULL,
+  `created_by_user_id` bigint DEFAULT NULL,
+  `created_at` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `FKdh2halxnbiwpkvpsgfjqrl0c4` (`applicant_id`),
+  KEY `FK65weib1lru9dkrbto5pv389vi` (`job_id`),
+  KEY `FKdp0k6h272orck0rd8ibicy1ha` (`updated_by_user_id`),
+  KEY `FKbg4t17fpc0smomk6dwh1sc1oe` (`created_by_user_id`),
+  CONSTRAINT `FK65weib1lru9dkrbto5pv389vi` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`id`),
+  CONSTRAINT `FKbg4t17fpc0smomk6dwh1sc1oe` FOREIGN KEY (`created_by_user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `FKdh2halxnbiwpkvpsgfjqrl0c4` FOREIGN KEY (`applicant_id`) REFERENCES `applicants` (`id`),
+  CONSTRAINT `FKdp0k6h272orck0rd8ibicy1ha` FOREIGN KEY (`updated_by_user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `applications`
+--
+
+LOCK TABLES `applications` WRITE;
+/*!40000 ALTER TABLE `applications` DISABLE KEYS */;
+INSERT INTO `applications` VALUES (1,'2025-08-18 11:30:10.424000','HIRED','2025-11-27 11:32:53.584000',1,2,1,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433'),(2,'2025-08-18 12:27:34.000000','NEW','2025-08-18 12:27:34.000000',1,3,2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433'),(5,'2025-08-22 12:49:52.596000','NEW','2025-08-22 12:49:52.596000',3,2,4,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433'),(6,'2025-08-22 12:49:58.567000','NEW','2025-11-27 11:29:11.278000',3,3,1,'Strong background in HR works','2025-11-15 00:00:00.000000','Bachelor of Science in Computer Science','chan@example.com',_binary '¬í\0 sr\0 java.util.ArrayListx Ò ™Ça  \0 I\0 sizexp\0\0\0 w \0\0\0 t\0 Recruitment Managert\0 HR Recruiter 1x',60000,'https://linkedin.com/in/juandelacruz','09981234567','09171234567',55000,'Java, Spring Boot, React, MySQL','LinkedIn',NULL,'2025-12-21 16:31:29.005433'),(7,'2025-09-14 13:12:28.406000','NEW','2025-09-14 13:12:28.406000',6,2,9,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433'),(8,'2025-09-16 12:19:02.200000','NEW','2025-09-16 12:19:02.200000',6,6,9,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433'),(9,'2025-10-13 10:50:20.300000','WITHDRAWN','2025-10-13 10:56:55.044000',1,8,2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433'),(10,'2025-10-14 10:47:46.817000','NEW','2025-10-14 10:47:46.817000',1,6,2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433'),(11,'2025-10-14 11:00:17.985000','WITHDRAWN','2025-10-14 11:01:11.022000',1,7,2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'2025-12-21 16:31:29.005433');
+/*!40000 ALTER TABLE `applications` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-10-11 22:05:20
