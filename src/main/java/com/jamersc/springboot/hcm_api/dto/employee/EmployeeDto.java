@@ -1,10 +1,9 @@
 package com.jamersc.springboot.hcm_api.dto.employee;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -14,21 +13,14 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeDto {
-    private Long id;
-    @NotBlank(message = "First name is required")
+    private String id;
     private String firstName;
-    @NotBlank(message = "Last name is required")
     private String lastName;
-    @Email(message = "Email should be valid")
-    @NotBlank(message = "Email is required")
     private String email;
-    private Long jobId;
-    @NotNull(message = "Hired date is required")
+    private String jobId;
     //@JsonFormat(pattern = "yyyy-MM-dd")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate hiredDate;
-    @NotNull(message = "Salary is required")
-    @Min(value = 0, message = "Salary must be a non-negative value")
     private Double salary;
     public String getSalary() {
         return String.format("%.2f", salary);

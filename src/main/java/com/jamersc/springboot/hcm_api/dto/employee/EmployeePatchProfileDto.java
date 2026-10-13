@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeePatchProfileDto {
-    private Long id;
+    private String id;
     private String firstName;
     private String lastName;
     private String email;

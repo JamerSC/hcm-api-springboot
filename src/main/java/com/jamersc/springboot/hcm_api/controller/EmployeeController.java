@@ -34,11 +34,11 @@ public class EmployeeController {
     }
 
 
-    @PreAuthorize("hasAuthority('VIEW_EMPLOYEES')")
+    @PreAuthorize("hasAuthoarity('VIEW_EMPLOYEES')")
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<EmployeeResponseDto>>> getAllEmployees(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Long jobId,
+            @RequestParam(required = false) String jobId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
@@ -63,7 +63,9 @@ public class EmployeeController {
     @PreAuthorize("hasAuthority('VIEW_EMPLOYEES')")
     // Get employee profile with username & role
     @GetMapping("/{id}/profile")
-    public ResponseEntity<ApiResponse<Optional<EmployeeProfileDto>>> getEmployeeProfile(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Optional<EmployeeProfileDto>>> getEmployeeProfile(
+            @PathVariable String id
+    ) {
         Optional<EmployeeProfileDto> retrievedEmployeeProfile= employeeService.getEmployeeProfile(id);
         ApiResponse<Optional<EmployeeProfileDto>> response = ApiResponse.<Optional<EmployeeProfileDto>>builder()
                 .success(true)
@@ -78,7 +80,7 @@ public class EmployeeController {
     @PreAuthorize("hasAuthority('VIEW_EMPLOYEES')")
     // Get employee by id
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Optional<EmployeeResponseDto>>> getEmployee(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Optional<EmployeeResponseDto>>> getEmployee(@PathVariable String id) {
         Optional<EmployeeResponseDto> retrievedEmployee = employeeService.getEmployee(id);
         ApiResponse<Optional<EmployeeResponseDto>> response = ApiResponse.<Optional<EmployeeResponseDto>>builder()
                 .success(true)
@@ -122,7 +124,7 @@ public class EmployeeController {
     @PreAuthorize("hasAuthority('UPDATE_EMPLOYEES')")
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<EmployeeResponseDto>> updateEmployee(
-            @PathVariable Long id, @RequestBody EmployeePatchDto dto, Authentication authentication) {
+            @PathVariable String id, @RequestBody EmployeePatchDto dto, Authentication authentication) {
         EmployeeResponseDto patchedEmployee = employeeService.patchEmployee(id, dto, authentication);
         ApiResponse<EmployeeResponseDto> response = ApiResponse.<EmployeeResponseDto>builder()
                 .success(true)
@@ -153,7 +155,7 @@ public class EmployeeController {
     @PreAuthorize("hasAuthority('ARCHIVE_EMPLOYEES')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> archiveEmployee(
-            @PathVariable Long id, Authentication authentication) {
+            @PathVariable String id, Authentication authentication) {
         Optional<EmployeeDto> tempEmployee = employeeService.findByEmployee(id);
 
         if (tempEmployee.isEmpty()) {
@@ -182,7 +184,7 @@ public class EmployeeController {
     @PreAuthorize("hasAuthority('UNARCHIVED_EMPLOYEES')")
     @PatchMapping("/{id}/unarchived")
     public ResponseEntity<ApiResponse<EmployeeResponseDto>> unarchivedEmployee(
-            @PathVariable Long id, Authentication authentication) {
+            @PathVariable String id, Authentication authentication) {
         EmployeeResponseDto unarchivedEmployee = employeeService.unarchivedEmployee(id, authentication);
         ApiResponse<EmployeeResponseDto> response = ApiResponse.<EmployeeResponseDto>builder()
                 .success(true)

@@ -3,101 +3,74 @@ package com.jamersc.springboot.hcm_api.mapper;
 import com.jamersc.springboot.hcm_api.dto.employee.*;
 import com.jamersc.springboot.hcm_api.entity.Employee;
 import com.jamersc.springboot.hcm_api.entity.Role;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
+import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring",
-nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE) // This makes it a Spring-managed bean
-public interface EmployeeMapper {
+@Mapper(
+        componentModel = "spring",
+        uses = {HashidService.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
+public abstract class EmployeeMapper {
 
-    // employee
-    @Mapping(target = "jobId", source = "job.id")
-    EmployeeDto entityToDto(Employee employee);
+    @Autowired
+    protected HashidService hashService;
 
+    // Entity -> DTO (Encode Long to Hash)
+    @Mapping(target = "id", expression = "java(hashService.encode(employee.getId()))")
+    @Mapping(target = "jobId", expression = "java(hashService.encode(employee.getJob() != null ? employee.getJob().getId() : null))")
+    public abstract EmployeeDto entityToDto(Employee employee);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "job", ignore = true)
     @Mapping(target = "leaves", ignore = true)
     @Mapping(target = "attendanceRecords", ignore = true)
-    @Mapping(target = "job", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "user", ignore = true)
-    Employee dtoToEntity(EmployeeDto dto);
+    public abstract Employee dtoToEntity(EmployeeDto dto);
 
-    // employee profile
+    // Profile DTO
+    @Mapping(target = "id", expression = "java(hashService.encode(employee.getId()))")
     @Mapping(target = "jobPosition", source = "job.title")
     @Mapping(target = "username", source = "user.username")
-    @Mapping(target = "roles", expression = "java(mapRoles(employee.getUser().getRoles()))")
-    EmployeeProfileDto entityToProfileDto(Employee employee);
+    @Mapping(target = "roles", expression = "java(mapRoles(employee.getUser() != null ? employee.getUser().getRoles() : null))")
+    public abstract EmployeeProfileDto entityToProfileDto(Employee employee);
 
-    default Set<String> mapRoles(Set<Role> roles) {
-        if (roles==null) {
-            return null;
-        }
-        return roles.stream()
-                .map(Role::getRoleName).collect(Collectors.toSet());
-    }
-
-    // create employee mapper
-    @Mapping(target = "jobId", source = "job.id")
-    EmployeeCreateDto createEntityToDto(Employee employee);
-
-    @Mapping(target = "leaves", ignore = true)
-    @Mapping(target = "attendanceRecords", ignore = true)
-    @Mapping(target = "job", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "id", ignore = true)
-    Employee createDtoToEntity(EmployeeCreateDto dto);
-
+    // Response DTO
+    @Mapping(target = "id", expression = "java(hashService.encode(employee.getId()))")
     @Mapping(target = "department", source = "job.department.name")
     @Mapping(target = "salary", expression = "java(employee.formattedSalary())")
     @Mapping(target = "jobPosition", source = "job.title")
     @Mapping(target = "updatedBy", source = "updatedBy.employee.job.title")
     @Mapping(target = "createdBy", source = "createdBy.employee.job.title")
-    EmployeeResponseDto entityToEmployeeResponseDTO(Employee employee);
+    public abstract EmployeeResponseDto entityToEmployeeResponseDTO(Employee employee);
 
-    // employee update
-    @Mapping(target = "jobId", source = "job.id")
-    EmployeeUpdateDto updateEntityToDto(Employee employee);
-
-    @Mapping(target = "leaves", ignore = true)
-    @Mapping(target = "attendanceRecords", ignore = true)
-    @Mapping(target = "job", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "user", ignore = true)
-    Employee updateDtoToEntity(EmployeeUpdateDto dto);
-
-    @Mapping(target = "jobId", source = "employee.job.id")
-    EmployeePatchDto entityToPatchDto(Employee employee);
-
-    @Mapping(target = "user", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+    // Create DTO -> Entity (Entity ID and Job are resolved in Service layer)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "leaves", ignore = true)
     @Mapping(target = "job", ignore = true)
+    @Mapping(target = "leaves", ignore = true)
+    @Mapping(target = "attendanceRecords", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "attendanceRecords", ignore = true)
-    Employee patchDtoToEntity(EmployeePatchDto dto);
+    @Mapping(target = "user", ignore = true)
+    public abstract Employee createDtoToEntity(EmployeeCreateDto dto);
 
-    // List collection of employee
-    List<EmployeeDto> entitiesToDtos(List<Employee> employees);
+    protected Set<String> mapRoles(Set<Role> roles) {
+        if (roles == null) return null;
+        return roles.stream().map(Role::getRoleName).collect(Collectors.toSet());
+    }
 
-    List<EmployeeResponseDto> entitiesToResponseDtos(List<Employee> employees);
-
-    List<Employee> dtosToEntities(List<EmployeeDto> dtos);
-
+    public abstract List<EmployeeDto> entitiesToDtos(List<Employee> employees);
+    public abstract List<EmployeeResponseDto> entitiesToResponseDtos(List<Employee> employees);
 }
