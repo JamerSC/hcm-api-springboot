@@ -13,15 +13,12 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeProfileDto {
-    // Fields from Employee entity
-    private Long id;
+    private String id;           // Hash ID
+    private String username;
     private String firstName;
     private String lastName;
     private String email;
     private String jobPosition;
     private LocalDate hiredDate;
-    private Double salary;
-    // Fields from User entity
-    private String username;
     private Set<String> roles;
 }

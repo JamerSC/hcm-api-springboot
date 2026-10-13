@@ -13,7 +13,6 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeUpdateDto {
-    private Long id;
     @NotBlank(message = "First name is required")
     private String firstName;
     @NotBlank(message = "Last name is required")
@@ -22,7 +21,7 @@ public class EmployeeUpdateDto {
     @NotBlank(message = "Email is required")
     private String email;
 
-    private Long jobId;
+    private String jobId;
     //@NotBlank(message = "Job Position is required")
 //    private String jobPosition;
     //@NotBlank(message = "Department is required")

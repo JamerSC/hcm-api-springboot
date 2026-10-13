@@ -15,7 +15,8 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeResponseDto {
-    private Long id;
+//    private Long id;
+    private String id;
     private String firstName;
     private String lastName;
     private String email;

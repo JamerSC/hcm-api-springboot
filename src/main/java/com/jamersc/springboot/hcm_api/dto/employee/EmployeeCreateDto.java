@@ -13,15 +13,15 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmployeeCreateDto {
+    @NotBlank(message = "Job title is required")
+    private String jobId;        // Hash ID of the Job
     @NotBlank(message = "First name is required")
     private String firstName;
     @NotBlank(message = "Last name is required")
     private String lastName;
-    @Email(message = "Email should be valid")
+    @Email(message = "Invalid email format")
     @NotBlank(message = "Email is required")
     private String email;
-    @NotNull(message = "Job Position is required")
-    private Long jobId;
     @NotNull(message = "Hired date is required")
     private LocalDate hiredDate;
     @NotNull(message = "Salary is required")

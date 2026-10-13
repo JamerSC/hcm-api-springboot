@@ -12,19 +12,18 @@ import java.util.Optional;
 public interface EmployeeService {
     Page<EmployeeResponseDto> getAllEmployees(
             String search,
-            Long jobId,
+            String jobId,          // Hash ID
             LocalDate dateFrom,
             LocalDate dateTo,
             Pageable pageable
     );
-    //EmployeeDto findById(Long id);
-    Optional<EmployeeProfileDto> getEmployeeProfile(Long id);
-    Optional<EmployeeResponseDto> getEmployee(Long id);
-    Optional<EmployeeDto> findByEmployee(Long id);
+
+    Optional<EmployeeProfileDto> getEmployeeProfile(String id);
+    Optional<EmployeeResponseDto> getEmployee(String id);
+    Optional<EmployeeDto> findByEmployee(String id);
     EmployeeProfileDto getMyEmployeeProfile(Authentication authentication);
     EmployeeResponseDto createEmployee(EmployeeCreateDto dto, Authentication authentication);
-    Employee updateEmployee(EmployeeUpdateDto dto, Authentication authentication);
-    EmployeeResponseDto patchEmployee(Long id, EmployeePatchDto dto, Authentication authentication);
-    void archiveEmployee(Long id, Authentication authentication);
-    EmployeeResponseDto unarchivedEmployee(Long id, Authentication authentication);
+    EmployeeResponseDto patchEmployee(String id, EmployeePatchDto dto, Authentication authentication);
+    void archiveEmployee(String id, Authentication authentication);
+    EmployeeResponseDto unarchivedEmployee(String id, Authentication authentication);
 }

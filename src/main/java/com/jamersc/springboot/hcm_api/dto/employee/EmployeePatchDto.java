@@ -16,7 +16,8 @@ public class EmployeePatchDto {
     private String lastName;
     @Email(message = "Email should be valid")
     private String email;
-    private Long jobId;
+//    private Long jobId;
+    private String jobId;        // Hash ID of the Job
     private LocalDate hiredDate;
     @Min(value = 0, message = "Salary must be a non-negative value")
     private Double salary;
