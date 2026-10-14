@@ -5,56 +5,63 @@ import com.jamersc.springboot.hcm_api.dto.department.DepartmentDto;
 import com.jamersc.springboot.hcm_api.dto.department.DepartmentPatchDto;
 import com.jamersc.springboot.hcm_api.dto.department.DepartmentResponseDto;
 import com.jamersc.springboot.hcm_api.entity.Department;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface DepartmentMapper {
+@Mapper(
+        componentModel = "spring",
+        uses = {HashidService.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
+public abstract class DepartmentMapper {
 
-    DepartmentDto entityToDeptDto(Department dept);
+    @Autowired
+    protected HashidService hashService;
 
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "jobs", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    Department deptDtoToEntity(DepartmentDto dto);
+    @Mapping(target = "id", expression = "java(hashService.encode(dept.getId()))")
+    public abstract DepartmentDto entityToDeptDto(Department dept);
 
-    // create department mapper
-    DepartmentCreateDto entityToCreateDto(Department dept);
-
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "jobs", ignore = true)
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "jobs", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    Department createDtoToEntity(DepartmentCreateDto dto);
+    public abstract Department deptDtoToEntity(DepartmentDto dto);
 
-    // response department mapper
-    // convert department entity to the response dto
+    public abstract DepartmentCreateDto entityToCreateDto(Department dept);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "jobs", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    public abstract Department createDtoToEntity(DepartmentCreateDto dto);
+
+    @Mapping(target = "id", expression = "java(hashService.encode(dept.getId()))")
     @Mapping(target = "updatedBy", source = "updatedBy.employee.job.title")
     @Mapping(target = "createdBy", source = "createdBy.employee.job.title")
-    DepartmentResponseDto entityToDepartmentResponseDto(Department dept);
+    public abstract DepartmentResponseDto entityToDepartmentResponseDto(Department dept);
 
-    DepartmentPatchDto entityToPatchDto(Department dept);
+    public abstract DepartmentPatchDto entityToPatchDto(Department dept);
 
-
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "jobs", ignore = true)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdBy",ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    Department patchDtoToEntity(DepartmentPatchDto dto);
+    public abstract Department patchDtoToEntity(DepartmentPatchDto dto);
 
-    List<DepartmentDto> entitiesToDeptDtos(List<Department> departments);
-
-    List<DepartmentResponseDto> entitiesToDeptResponseDto(List<Department> departments);
-
-    List<Department> deptDtosToEntities(List<DepartmentDto> deptDtos);
+    public abstract List<DepartmentDto> entitiesToDeptDtos(List<Department> departments);
+    public abstract List<DepartmentResponseDto> entitiesToDeptResponseDto(List<Department> departments);
+    public abstract List<Department> deptDtosToEntities(List<DepartmentDto> deptDtos);
 }

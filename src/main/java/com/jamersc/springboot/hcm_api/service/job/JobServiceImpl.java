@@ -13,6 +13,7 @@ import com.jamersc.springboot.hcm_api.repository.DepartmentRepository;
 import com.jamersc.springboot.hcm_api.repository.JobRepository;
 import com.jamersc.springboot.hcm_api.repository.JobSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import com.jamersc.springboot.hcm_api.service.user.UserServiceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,44 +40,31 @@ public class JobServiceImpl implements JobService {
     private final UserRepository userRepository;
     private final JobMapper jobMapper;
     private final DepartmentRepository departmentRepository;
+    private final HashidService hashService;
 
-    /**
-     * For Admin/Manager
-     */
     @Override
     public Page<JobDto> getAllJob(
             String search,
-            Long departmentId,
+            String departmentId,
             JobStatus status,
             LocalDate dateFrom,
             LocalDate dateTo,
             Pageable pageable
     ) {
-        log.debug("Fetching all jobs with filters - Search: {}, department id {}, job status {},  date from {}, date to {}",
-                search, departmentId, status, dateFrom, dateTo
-        );
+        Long decodedDeptId = (departmentId != null && !departmentId.isBlank())
+                ? hashService.decode(departmentId)
+                : null;
 
         Specification<Job> spec = Specification.allOf(
                 JobSpecification.search(search),
-                JobSpecification.hasDepartment(departmentId),
+                JobSpecification.hasDepartment(decodedDeptId),
                 JobSpecification.hasStatus(status),
                 JobSpecification.dateRange(dateFrom, dateTo)
         );
 
-        Page<Job> jobs = jobRepository.findAll(spec, pageable);
-
-        return jobs.map(jobMapper::entityToJobDto);
+        return jobRepository.findAll(spec, pageable).map(jobMapper::entityToJobDto);
     }
 
-//    @Override
-//    public Page<JobDto> getAllJob(Pageable pageable) {
-//        Page<Job> jobs = jobRepository.findAll(pageable);
-//        return jobs.map(jobMapper::entityToJobDto);
-//    }
-
-    /**
-     * For Applicant
-     */
     @Override
     public Page<JobResponseDto> getOpenJobs(
             String search,
@@ -84,68 +72,62 @@ public class JobServiceImpl implements JobService {
             LocalDate dateTo,
             Pageable pageable
     ) {
-        log.debug("Fetching open jobs with filters - Search: {}, date from {}, date to {}",
-                search, dateFrom, dateTo
-        );
         Specification<Job> spec = Specification.allOf(
                 JobSpecification.hasStatusOpen(),
                 JobSpecification.search(search),
                 JobSpecification.dateRange(dateFrom, dateTo)
         );
-        Page<Job> openJobs = jobRepository.findAll(spec, pageable);
-        return openJobs.map(jobMapper::entityToJobResponseDto);
+        return jobRepository.findAll(spec, pageable).map(jobMapper::entityToJobResponseDto);
     }
 
-//    @Override
-//    public Page<JobResponseDto> getOpenJobs(Pageable pageable) {
-//        Page<Job> openJobs = jobRepository.findByStatus(pageable, JobStatus.OPEN);
-//        return openJobs.map(jobMapper::entityToJobResponseDto);
-//    }
-
     @Override
-    public Optional<JobResponseDto> getJob(Long id) {
-        return Optional.of(jobRepository.findById(id)
+    public Optional<JobResponseDto> getJob(String id) {
+        Long rawId = hashService.decode(id);
+        return Optional.of(jobRepository.findById(rawId)
                         .map(jobMapper::entityToJobResponseDto))
-                .orElseThrow(() -> new RuntimeException("Job Id not found"));
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
     }
 
     @Override
     public JobResponseDto createJob(JobCreateDto dto, Authentication authentication) {
-        Department department = departmentRepository.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new RuntimeException("Department id not found!"));
-        
+        Long rawDeptId = hashService.decode(dto.getDepartmentId());
+        Department department = departmentRepository.findById(rawDeptId)
+                .orElseThrow(() -> new RuntimeException("Department not found with id: " + dto.getDepartmentId()));
+
         User currentUser = getUser(authentication);
 
         Job job = jobMapper.jobCreateDtoToEntity(dto);
         job.setDepartment(department);
+        job.setStatus(JobStatus.CREATED);
         job.setCreatedBy(currentUser);
         job.setUpdatedBy(currentUser);
 
-        Job saveJob = jobRepository.save(job);
-
-        return jobMapper.entityToJobResponseDto(saveJob);
+        Job savedJob = jobRepository.save(job);
+        return jobMapper.entityToJobResponseDto(savedJob);
     }
 
     @Override
-    public JobResponseDto openJob(Long id, Authentication authentication) {
-        Job job = jobRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Job not found"));
+    public JobResponseDto openJob(String id, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        Job job = jobRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
         User currentUser = getUser(authentication);
 
         job.setStatus(JobStatus.OPEN);
         job.setPostedBy(currentUser);
+        job.setPostedDate(LocalDate.now());
         job.setUpdatedBy(currentUser);
 
         Job openJob = jobRepository.save(job);
-
         return jobMapper.entityToJobResponseDto(openJob);
     }
 
     @Override
-    public JobResponseDto updateJob(Long id, JobPatchDto dto, Authentication authentication) {
-        Job job = jobRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Job not found"));
+    public JobResponseDto updateJob(String id, JobPatchDto dto, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        Job job = jobRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
         User currentUser = getUser(authentication);
 
@@ -153,17 +135,18 @@ public class JobServiceImpl implements JobService {
             job.setTitle(dto.getTitle());
         }
         if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
-            job.setTitle(dto.getDescription());
+            job.setDescription(dto.getDescription());
         }
         if (dto.getRequirements() != null && !dto.getRequirements().isBlank()) {
-            job.setTitle(dto.getRequirements());
+            job.setRequirements(dto.getRequirements());
         }
         if (dto.getLocation() != null && !dto.getLocation().isBlank()) {
-            job.setTitle(dto.getRequirements());
+            job.setLocation(dto.getLocation());
         }
-        if (dto.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(dto.getDepartmentId())
-                    .orElseThrow(()-> new RuntimeException("Department not found"));
+        if (dto.getDepartmentId() != null && !dto.getDepartmentId().isBlank()) {
+            Long rawDeptId = hashService.decode(dto.getDepartmentId());
+            Department department = departmentRepository.findById(rawDeptId)
+                    .orElseThrow(() -> new RuntimeException("Department not found with id: " + dto.getDepartmentId()));
             job.setDepartment(department);
         }
 
@@ -174,9 +157,10 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public JobResponseDto fillJob(Long id, Authentication authentication) {
-        Job job = jobRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Job not found"));
+    public JobResponseDto fillJob(String id, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        Job job = jobRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
         User currentUser = getUser(authentication);
 
@@ -184,15 +168,15 @@ public class JobServiceImpl implements JobService {
         job.setPostedBy(null);
         job.setUpdatedBy(currentUser);
 
-        Job openJob = jobRepository.save(job);
-
-        return jobMapper.entityToJobResponseDto(openJob);
+        Job savedJob = jobRepository.save(job);
+        return jobMapper.entityToJobResponseDto(savedJob);
     }
 
     @Override
-    public JobResponseDto closeJob(Long id, Authentication authentication) {
-        Job job = jobRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Job not found"));
+    public JobResponseDto closeJob(String id, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        Job job = jobRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
         User currentUser = getUser(authentication);
 
@@ -200,26 +184,24 @@ public class JobServiceImpl implements JobService {
         job.setPostedBy(null);
         job.setUpdatedBy(currentUser);
 
-        Job openJob = jobRepository.save(job);
-
-        return jobMapper.entityToJobResponseDto(openJob);
+        Job savedJob = jobRepository.save(job);
+        return jobMapper.entityToJobResponseDto(savedJob);
     }
 
-    // todo improve validation
     @Override
-    public void archiveJob(Long id, Authentication authentication) {
-//        jobRepository.deleteById(id);
+    public void archiveJob(String id, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        jobRepository.deleteById(rawId);
     }
 
-    // todo improve validation
     @Override
-    public void unarchivedJob(Long id, Authentication authentication) {
-        //
+    public void unarchivedJob(String id, Authentication authentication) {
+        // Implementation for unarchiving if soft delete is used
     }
 
     private User getUser(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(()-> new RuntimeException("Authenticated user not found."));
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
     }
 }

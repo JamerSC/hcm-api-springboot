@@ -14,5 +14,5 @@ public class JobPatchDto {
     private String description;
     private String requirements;
     private String location;
-    private Long departmentId;
+    private String departmentId; // Hash ID
 }

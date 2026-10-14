@@ -14,7 +14,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DepartmentResponseDto {
-    private Long id;
+    private String id;           // Hash ID
     private String name;
     private String code;
 

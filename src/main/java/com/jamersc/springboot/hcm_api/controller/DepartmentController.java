@@ -32,7 +32,7 @@ public class DepartmentController {
     }
 
     @PreAuthorize("hasAuthority('VIEW_DEPARTMENTS')")
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<ApiResponse<Page<DepartmentResponseDto>>> getAllDepartments(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
@@ -40,112 +40,87 @@ public class DepartmentController {
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<DepartmentResponseDto> retrievedDepartments = departmentService.getAllDepartments(
-                search,
-                dateFrom,
-                dateTo,
-                pageable
+                search, dateFrom, dateTo, pageable
         );
-        ApiResponse<Page<DepartmentResponseDto>> response = ApiResponse.<Page<DepartmentResponseDto>>builder()
+        return ResponseEntity.ok(ApiResponse.<Page<DepartmentResponseDto>>builder()
                 .success(true)
                 .message("List of departments retrieved successfully!")
                 .data(retrievedDepartments)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('CREATE_DEPARTMENTS')")
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<ApiResponse<DepartmentResponseDto>> createDepartment(
             @Valid @RequestBody DepartmentCreateDto createDto,
             Authentication authentication) {
         DepartmentResponseDto createdDepartment = departmentService.createDepartment(createDto, authentication);
-        ApiResponse<DepartmentResponseDto> response = ApiResponse.<DepartmentResponseDto>builder()
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<DepartmentResponseDto>builder()
                 .success(true)
                 .message("Department created successfully!")
                 .data(createdDepartment)
                 .status(HttpStatus.CREATED.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('VIEW_DEPARTMENTS')")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Optional<DepartmentResponseDto>>> getDepartment(@PathVariable Long id) {
-        Optional<DepartmentResponseDto> retrievedDepartment = departmentService.getDepartment(id);
-        ApiResponse<Optional<DepartmentResponseDto>> response = ApiResponse.<Optional<DepartmentResponseDto>>builder()
+    public ResponseEntity<ApiResponse<Optional<DepartmentResponseDto>>> getDepartment(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.<Optional<DepartmentResponseDto>>builder()
                 .success(true)
                 .message("Department retrieved successfully!")
-                .data(retrievedDepartment)
+                .data(departmentService.getDepartment(id))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('UPDATE_DEPARTMENTS')")
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<DepartmentResponseDto>> updateDepartment(
-            @PathVariable Long id, @RequestBody DepartmentPatchDto patchDTO, Authentication authentication) {
+            @PathVariable String id,
+            @RequestBody DepartmentPatchDto patchDTO,
+            Authentication authentication) {
         DepartmentResponseDto updatedDepartment = departmentService.updateDepartment(id, patchDTO, authentication);
-        ApiResponse<DepartmentResponseDto> response = ApiResponse.<DepartmentResponseDto>builder()
+        return ResponseEntity.ok(ApiResponse.<DepartmentResponseDto>builder()
                 .success(true)
                 .message("Department updated successfully!")
                 .data(updatedDepartment)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('ARCHIVE_DEPARTMENTS')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> archiveDepartment(
-            @PathVariable Long id, Authentication authentication) {
-        Optional<DepartmentResponseDto> department =
-                departmentService.getDepartment(id);
-
-        if (department.isEmpty()) {
-            ApiResponse<String> response = ApiResponse.<String>builder()
-                    .success(true)
-                    .message("Department not found!")
-                    .data(null)
-                    .status(HttpStatus.NOT_FOUND.value())
-                    .timestamp(LocalDateTime.now())
-                    .build();
-            return ResponseEntity.ok(response);
-        }
-
+    public ResponseEntity<ApiResponse<Void>> archiveDepartment(
+            @PathVariable String id,
+            Authentication authentication) {
         departmentService.archiveDepartment(id, authentication);
-        ApiResponse<String> response = ApiResponse.<String>builder()
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true)
                 .message("Department archived successfully!")
                 .data(null)
-                .status(HttpStatus.NO_CONTENT.value())
+                .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('UNARCHIVED_DEPARTMENTS')")
     @PatchMapping("/{id}/unarchived")
     public ResponseEntity<ApiResponse<DepartmentResponseDto>> unarchivedDepartment(
-            @PathVariable Long id, Authentication authentication) {
-        DepartmentResponseDto unarchivedDepartment = departmentService
-                .unarchivedDepartment(id, authentication);
-        ApiResponse<DepartmentResponseDto> response = ApiResponse.<DepartmentResponseDto>builder()
+            @PathVariable String id,
+            Authentication authentication) {
+        DepartmentResponseDto unarchivedDepartment = departmentService.unarchivedDepartment(id, authentication);
+        return ResponseEntity.ok(ApiResponse.<DepartmentResponseDto>builder()
                 .success(true)
                 .message("Department unarchived successfully!")
                 .data(unarchivedDepartment)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 }

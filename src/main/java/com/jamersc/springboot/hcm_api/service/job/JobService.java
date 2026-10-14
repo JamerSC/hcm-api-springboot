@@ -13,10 +13,9 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public interface JobService {
-
     Page<JobDto> getAllJob(
             String search,
-            Long departmentId,
+            String departmentId, // Hash ID
             JobStatus status,
             LocalDate dateFrom,
             LocalDate dateTo,
@@ -28,12 +27,12 @@ public interface JobService {
             LocalDate dateTo,
             Pageable pageable
     );
-    Optional<JobResponseDto> getJob(Long id);
+    Optional<JobResponseDto> getJob(String id);
     JobResponseDto createJob(JobCreateDto dto, Authentication authentication);
-    JobResponseDto openJob(Long id, Authentication authentication);
-    JobResponseDto updateJob(Long id, JobPatchDto dto, Authentication authentication);
-    JobResponseDto fillJob(Long id, Authentication authentication);
-    JobResponseDto closeJob(Long id, Authentication authentication);
-    void archiveJob(Long id, Authentication authentication);
-    void unarchivedJob(Long id, Authentication authentication);
+    JobResponseDto openJob(String id, Authentication authentication);
+    JobResponseDto updateJob(String id, JobPatchDto dto, Authentication authentication);
+    JobResponseDto fillJob(String id, Authentication authentication);
+    JobResponseDto closeJob(String id, Authentication authentication);
+    void archiveJob(String id, Authentication authentication);
+    void unarchivedJob(String id, Authentication authentication);
 }

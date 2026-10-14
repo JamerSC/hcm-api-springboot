@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JobResponseDto {
-    private Long jobId;
+    private String jobId;
     private LocalDate postedDate;
     private String postedBy;
     private String title;

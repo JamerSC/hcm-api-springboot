@@ -17,9 +17,9 @@ public interface DepartmentService {
             LocalDate dateTo,
             Pageable pageable
     );
-    Optional<DepartmentResponseDto> getDepartment(Long id);
+    Optional<DepartmentResponseDto> getDepartment(String id);
     DepartmentResponseDto createDepartment(DepartmentCreateDto dto, Authentication authentication);
-    DepartmentResponseDto updateDepartment(Long id, DepartmentPatchDto dto, Authentication authentication);
-    void archiveDepartment(Long id, Authentication authentication);
-    DepartmentResponseDto unarchivedDepartment(Long id, Authentication authentication);
+    DepartmentResponseDto updateDepartment(String id, DepartmentPatchDto dto, Authentication authentication);
+    void archiveDepartment(String id, Authentication authentication);
+    DepartmentResponseDto unarchivedDepartment(String id, Authentication authentication);
 }

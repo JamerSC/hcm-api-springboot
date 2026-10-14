@@ -34,7 +34,7 @@ public class EmployeeController {
     }
 
 
-    @PreAuthorize("hasAuthoarity('VIEW_EMPLOYEES')")
+    @PreAuthorize("hasAuthority('VIEW_EMPLOYEES')")
     @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<EmployeeResponseDto>>> getAllEmployees(
             @RequestParam(required = false) String search,

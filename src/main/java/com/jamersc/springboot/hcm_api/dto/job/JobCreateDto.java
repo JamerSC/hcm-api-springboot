@@ -22,5 +22,6 @@ public class JobCreateDto {
     @NotBlank(message = "Location is required")
     private String location;
     private LocalDate postedDate;
-    private Long departmentId;
+    @NotBlank(message = "Department is required")
+    private String departmentId; // Hash ID
 }
