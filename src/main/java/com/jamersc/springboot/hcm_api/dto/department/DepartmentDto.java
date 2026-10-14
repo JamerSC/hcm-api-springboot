@@ -11,8 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DepartmentDto {
-    private Long id;
-    @NotBlank(message = "Department is required!")
+    private String id;           // Hash ID
     private String name;
     private String code;
 }

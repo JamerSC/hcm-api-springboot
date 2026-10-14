@@ -9,6 +9,7 @@ import com.jamersc.springboot.hcm_api.mapper.DepartmentMapper;
 import com.jamersc.springboot.hcm_api.repository.DepartmentRepository;
 import com.jamersc.springboot.hcm_api.repository.DepartmentSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
     private final DepartmentMapper departmentMapper;
     private final UserRepository userRepository;
+    private final HashidService hashService;
 
     @Override
     public Page<DepartmentResponseDto> getAllDepartments(
@@ -65,17 +67,11 @@ public class DepartmentServiceImpl implements DepartmentService {
 //    }
 
     @Override
-    public Optional<DepartmentResponseDto> getDepartment(Long id) {
-        return Optional.of(departmentRepository.findById(id)
+    public Optional<DepartmentResponseDto> getDepartment(String id) {
+        Long rawId = hashService.decode(id);
+        return Optional.of(departmentRepository.findById(rawId)
                         .map(departmentMapper::entityToDepartmentResponseDto))
-                .orElseThrow(() -> new RuntimeException("Department id found! " + id));
-    }
-
-    // Get user authentication
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found in the database"));
+                .orElseThrow(() -> new RuntimeException("Department not found with id: " + id));
     }
 
     @Override
@@ -99,16 +95,16 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 
     @Override
-    public DepartmentResponseDto updateDepartment(Long id, DepartmentPatchDto dto, Authentication authentication) {
+    public DepartmentResponseDto updateDepartment(String id, DepartmentPatchDto dto, Authentication authentication) {
         User currentUser = getUser(authentication);
-        Department department = departmentRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Department not found"));
+        Long rawId = hashService.decode(id);
 
-        // Update only provided values (PATCH = partial update)
+        Department department = departmentRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("Department not found with id: " + id));
+
         if (dto.getCode() != null && !dto.getCode().isBlank()) {
             department.setCode(dto.getCode());
         }
-
         if (dto.getName() != null && !dto.getName().isBlank()) {
             department.setName(dto.getName());
         }
@@ -118,15 +114,21 @@ public class DepartmentServiceImpl implements DepartmentService {
         return departmentMapper.entityToDepartmentResponseDto(patchedDepartment);
     }
 
-    // todo improve validation
     @Override
-    public void archiveDepartment(Long id, Authentication authentication) {
-        //departmentRepository.deleteById(id);
+    public void archiveDepartment(String id, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        departmentRepository.deleteById(rawId);
     }
 
-    // todo improve validation
     @Override
-    public DepartmentResponseDto unarchivedDepartment(Long id, Authentication authentication) {
+    public DepartmentResponseDto unarchivedDepartment(String id, Authentication authentication) {
         return null;
+    }
+
+    // Get user authentication
+    private User getUser(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found in the database"));
     }
 }
