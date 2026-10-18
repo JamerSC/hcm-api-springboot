@@ -18,14 +18,23 @@ public interface ApplicantService {
             LocalDate dateFrom,
             LocalDate dateTo,
             Pageable pageable
-    ); // for admin/hr role
-    Optional<ApplicantResponseDto> getApplicant(Long id); // for admin/hr role
+    );
+
+    Optional<ApplicantResponseDto> getApplicant(String id); // Hash ID
+
     ApplicantResponseDto getMyApplicantProfile(Authentication authentication);
+
     ApplicantResponseDto updateMyApplicantProfile(ApplicantProfileDto profileDto, Authentication authentication);
+
     ApplicantResponseDto uploadResume(MultipartFile file, Authentication authentication);
-    ApplicationResponseDto apply(Long id, Authentication authentication);
+
+    ApplicationResponseDto apply(String jobId, Authentication authentication); // Job Hash ID
+
     Page<ApplicationResponseDto> getAllApplicantJobsApplied(Pageable pageable, Authentication authentication);
-    Optional<ApplicationResponseDto> getApplicantJobsApplied(Long id, Authentication authentication);
-    ApplicationResponseDto withdrawApplication(Long id, Authentication authentication);
+
+    Optional<ApplicationResponseDto> getApplicantJobsApplied(String applicationId, Authentication authentication); // Application Hash ID
+
+    ApplicationResponseDto withdrawApplication(String applicationId, Authentication authentication); // Application Hash ID
+
     void deleteApplicantAccount(Authentication authentication);
 }

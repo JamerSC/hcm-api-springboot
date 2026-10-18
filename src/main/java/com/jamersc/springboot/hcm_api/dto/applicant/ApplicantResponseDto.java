@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApplicantResponseDto {
-    private Long id;
+    private String id;           // Hash ID
     private String applicantFullName;
     private String email;
     private String phoneNumber;

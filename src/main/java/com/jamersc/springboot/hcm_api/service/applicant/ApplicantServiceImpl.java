@@ -9,6 +9,7 @@ import com.jamersc.springboot.hcm_api.mapper.ApplicationMapper;
 import com.jamersc.springboot.hcm_api.repository.*;
 import com.jamersc.springboot.hcm_api.service.email.EmailService;
 import com.jamersc.springboot.hcm_api.service.file.FileStorageService;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,14 +33,15 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ApplicantServiceImpl implements ApplicantService {
 
-    private final ApplicantRepository applicantRepository; // fetch applicant
+    private final ApplicantRepository applicantRepository;
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
-    private final UserRepository userRepository; // fetch user repository
-    private final ApplicantMapper applicantMapper; // mapping of applicant entity and dto
+    private final UserRepository userRepository;
+    private final ApplicantMapper applicantMapper;
     private final ApplicationMapper applicationMapper;
     private final FileStorageService fileStorageService;
     private final EmailService emailService;
+    private final HashidService hashService;
 
     @Override
     public Page<ApplicantResponseDto> getAllApplicants(
@@ -48,7 +50,6 @@ public class ApplicantServiceImpl implements ApplicantService {
             LocalDate dateTo,
             Pageable pageable
     ) {
-
         log.debug("Fetching all applicants filters: search={}, created date from {}, date to {}, pageable={}",
                 search, dateFrom, dateTo, pageable
         );
@@ -57,26 +58,17 @@ public class ApplicantServiceImpl implements ApplicantService {
                 ApplicantSpecification.search(search),
                 ApplicantSpecification.dateRange(dateFrom, dateTo)
         );
-        // fetch applicant from repository
-        Page<Applicant> applicants = applicantRepository.findAll(spec, pageable);
-        // map the Page<Applicant> to Page<JobDto>
-        return applicants.map(applicantMapper::entityToResponseDto);
+
+        return applicantRepository.findAll(spec, pageable)
+                .map(applicantMapper::entityToResponseDto);
     }
 
-//    @Override
-//    public Page<ApplicantResponseDto> getAllApplicants(Pageable pageable) {
-//        // fetch applicant from repository
-//        Page<Applicant> applicants = applicantRepository.findAll(pageable);
-//        // map the Page<Applicant> to Page<JobDto>
-//        return applicants.map(applicantMapper::entityToResponseDto);
-//    }
-
     @Override
-    public Optional<ApplicantResponseDto> getApplicant(Long id) {
-
-        return Optional.of(applicantRepository.findById(id)
+    public Optional<ApplicantResponseDto> getApplicant(String id) {
+        Long rawId = hashService.decode(id);
+        return Optional.of(applicantRepository.findById(rawId)
                 .map(applicantMapper::entityToResponseDto)
-                .orElseThrow(()-> new RuntimeException("Applicant id not found - " + id)));
+                .orElseThrow(() -> new RuntimeException("Applicant not found with id: " + id)));
     }
 
     @Override
@@ -104,7 +96,6 @@ public class ApplicantServiceImpl implements ApplicantService {
         existingApplicant.setUpdatedBy(currentUser);
 
         Applicant updatedApplicant = applicantRepository.save(existingApplicant);
-
         return applicantMapper.entityToResponseDto(updatedApplicant);
     }
 
@@ -113,37 +104,30 @@ public class ApplicantServiceImpl implements ApplicantService {
         User applicantUser = getUser(authentication);
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
                 .orElseThrow(() -> new RuntimeException("Applicant profile not found for user: " + applicantUser));
-        // 1. BEST PRACTICE: Store the file first, retrieve the path/name
-        // Use the user's ID to make the file name unique and searchable
+
         String storeFileName = fileStorageService.storeFile(file, String.valueOf(applicantUser.getId()));
 
-        // 2. Update the database record with the file path
         applicant.setCvFilePath(storeFileName);
         applicant.setUpdatedBy(applicantUser);
 
         Applicant uploadResume = applicantRepository.save(applicant);
-
         return applicantMapper.entityToResponseDto(uploadResume);
     }
 
     @Override
-    public ApplicationResponseDto apply(Long id, Authentication authentication) {
-        // find the job
-        Job job = jobRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found"));
+    public ApplicationResponseDto apply(String jobId, Authentication authentication) {
+        Long rawJobId = hashService.decode(jobId);
+        Job job = jobRepository.findById(rawJobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
 
-        // fetch applicant entity using user entity
         User applicantUser = getUser(authentication);
-
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
                 .orElseThrow(() -> new RuntimeException("Applicant profile not found!"));
 
-        // check applicant if applied
         if (applicationRepository.findByApplicantAndJob(applicant, job).isPresent()) {
             throw new RuntimeException("You have already applied for this job.");
         }
 
-        // create and save new application
         Application newApplication = new Application();
         newApplication.setApplicant(applicant);
         newApplication.setJob(job);
@@ -151,7 +135,6 @@ public class ApplicantServiceImpl implements ApplicantService {
 
         Application submittedApplication = applicationRepository.save(newApplication);
 
-        // email notification
         String email = submittedApplication.getApplicant().getUser().getEmail();
         String fullName = submittedApplication.getApplicant().getApplicantFullName();
         String jobTitle = submittedApplication.getJob().getTitle();
@@ -162,45 +145,38 @@ public class ApplicantServiceImpl implements ApplicantService {
         return applicationMapper.entityToApplicationResponseDto(submittedApplication);
     }
 
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
-    }
-
     @Override
     public Page<ApplicationResponseDto> getAllApplicantJobsApplied(Pageable pageable, Authentication authentication) {
         User applicantUser = getUser(authentication);
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
                 .orElseThrow(() -> new RuntimeException("Applicant profile not found."));
-        Page<Application> applications = applicationRepository.findApplicantApplicationsById(pageable ,applicant.getId());
+
+        Page<Application> applications = applicationRepository.findApplicantApplicationsById(pageable, applicant.getId());
         return applications.map(applicationMapper::entityToApplicationResponseDto);
     }
 
     @Override
-    public Optional<ApplicationResponseDto> getApplicantJobsApplied(Long id, Authentication authentication) {
-        // find the application
-        Application application = applicationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Application not found"));
+    public Optional<ApplicationResponseDto> getApplicantJobsApplied(String applicationId, Authentication authentication) {
+        Long rawApplicationId = hashService.decode(applicationId);
+        Application application = applicationRepository.findById(rawApplicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found with id: " + applicationId));
 
-        // fetch applicant entity using user
         User applicantUser = getUser(authentication);
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
-                .orElseThrow(()-> new RuntimeException("Applicant profile not found."));
+                .orElseThrow(() -> new RuntimeException("Applicant profile not found."));
 
         return Optional.ofNullable(
                 applicationRepository.findByApplicantAndId(applicant, application.getId())
                         .map(applicationMapper::entityToApplicationResponseDto)
-                        .orElseThrow(()-> new RuntimeException("Application id not found")));
+                        .orElseThrow(() -> new RuntimeException("Application not found with id: " + applicationId)));
     }
 
     @Override
-    public ApplicationResponseDto withdrawApplication(Long id, Authentication authentication) {
-        // find application by id
-        Application application = applicationRepository
-                .findById(id).orElseThrow(()-> new RuntimeException("Application id not found!"));
+    public ApplicationResponseDto withdrawApplication(String applicationId, Authentication authentication) {
+        Long rawApplicationId = hashService.decode(applicationId);
+        Application application = applicationRepository.findById(rawApplicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found with id: " + applicationId));
 
-        // fetch applicant
         User applicantUser = getUser(authentication);
 
         application.setStatus(ApplicationStatus.WITHDRAWN);
@@ -212,22 +188,22 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public void deleteApplicantAccount(Authentication authentication) {
-//      1. Get the authenticated user's details
         User userDetails = getUser(authentication);
-
-//      2. Find the User entity to be deleted
         User userToDelete = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(()-> new RuntimeException("Authenticated user not found."));
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
 
-//      3. Find the Applicant profile
         Applicant applicantProfile = applicantRepository.findByApplicantUser(userToDelete)
-                .orElseThrow(()-> new RuntimeException("Applicant profile not found"));
+                .orElseThrow(() -> new RuntimeException("Applicant profile not found."));
 
-//      4. Handle child entities (e.g., Applications) before deleting the parent
-//      A user's Applications must be deleted first to prevent foreign key constraint issues.
         List<Application> applications = applicationRepository.findByApplicant(applicantProfile);
         applicationRepository.deleteAll(applications);
 
         userRepository.delete(userToDelete);
+    }
+
+    private User getUser(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
     }
 }

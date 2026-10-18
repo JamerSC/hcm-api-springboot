@@ -25,6 +25,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/recruitments")
 public class RecruitmentController {
+
     private final ApplicantService applicantService;
     private final ApplicationService applicationService;
 
@@ -60,7 +61,7 @@ public class RecruitmentController {
     @PreAuthorize("hasAuthority('VIEW_APPLICANTS')")
     @GetMapping("/{id}/applicant")
     public ResponseEntity<ApiResponse<Optional<ApplicantResponseDto>>> getApplicant(
-            @PathVariable Long id) {
+            @PathVariable String id) {
         Optional<ApplicantResponseDto> retrievedApplicant = applicantService.getApplicant(id);
         ApiResponse<Optional<ApplicantResponseDto>> response = ApiResponse.<Optional<ApplicantResponseDto>>builder()
                 .success(true)
