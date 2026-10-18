@@ -16,7 +16,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApplicationResponseDto {
-    private Long applicationId;
+    private String applicationId;    // Hash ID
     private String applicantName;
     private String appliedPosition;
     private String description;

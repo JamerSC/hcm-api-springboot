@@ -16,7 +16,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApplicationDto {
-    private Long id;
+    private String id;
     private String applicantName;
     private String jobPosition;
     private String jobDescription;

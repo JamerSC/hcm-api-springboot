@@ -4,22 +4,33 @@ import com.jamersc.springboot.hcm_api.dto.application.ApplicationDto;
 import com.jamersc.springboot.hcm_api.dto.application.ApplicationResponseDto;
 import com.jamersc.springboot.hcm_api.dto.application.ApplicationUpdateDto;
 import com.jamersc.springboot.hcm_api.entity.Application;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface ApplicationMapper {
+@Mapper(
+        componentModel = "spring",
+        uses = {HashidService.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
+public abstract class ApplicationMapper {
 
+    @Autowired
+    protected HashidService hashService;
+
+    @Mapping(target = "id", expression = "java(hashService.encode(application.getId()))")
     @Mapping(target = "jobDescription", source = "job.description")
     @Mapping(target = "createdBy", source = "createdBy.username")
     @Mapping(target = "updatedBy", source = "updatedBy.username")
     @Mapping(target = "jobPosition", source = "job.title")
     @Mapping(target = "applicantName", source = "applicant.firstName")
-    ApplicationDto entityToDto(Application application);
+    public abstract ApplicationDto entityToDto(Application application);
 
     @Mapping(target = "source", ignore = true)
     @Mapping(target = "skills", ignore = true)
@@ -37,10 +48,10 @@ public interface ApplicationMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "job", ignore = true)
     @Mapping(target = "applicant", ignore = true)
-    Application dtoToEntity(ApplicationDto dto);
+    @Mapping(target = "id", ignore = true)
+    public abstract Application dtoToEntity(ApplicationDto dto);
 
-
-    @Mapping(target = "applicationId", source = "id")
+    @Mapping(target = "applicationId", expression = "java(hashService.encode(application.getId()))")
     @Mapping(target = "description", source = "job.description")
     @Mapping(target = "appliedPosition", source = "job.title")
     @Mapping(target = "applicantName", source = "applicant.applicantFullName")
@@ -48,7 +59,7 @@ public interface ApplicationMapper {
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    ApplicationUpdateDto entityToUpdateDto(Application application);
+    public abstract ApplicationUpdateDto entityToUpdateDto(Application application);
 
     @Mapping(target = "job", ignore = true)
     @Mapping(target = "id", ignore = true)
@@ -57,13 +68,13 @@ public interface ApplicationMapper {
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
-    Application updateDtoToEntity(ApplicationUpdateDto dto);
+    public abstract Application updateDtoToEntity(ApplicationUpdateDto dto);
 
-    @Mapping(target = "applicationId", source = "id")
+    @Mapping(target = "applicationId", expression = "java(hashService.encode(application.getId()))")
     @Mapping(target = "description", source = "job.description")
     @Mapping(target = "appliedPosition", source = "job.title")
     @Mapping(target = "applicantName", source = "applicant.applicantFullName")
-    ApplicationResponseDto entityToApplicationResponseDto(Application application);
+    public abstract ApplicationResponseDto entityToApplicationResponseDto(Application application);
 
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -84,9 +95,8 @@ public interface ApplicationMapper {
     @Mapping(target = "updatedBy", ignore = true)
     @Mapping(target = "job", ignore = true)
     @Mapping(target = "applicant", ignore = true)
-    Application applicationResponseDtoToEntity(ApplicationResponseDto dto);
+    public abstract Application applicationResponseDtoToEntity(ApplicationResponseDto dto);
 
-    List<ApplicationResponseDto> entitiesToResponseDtos(List<Application> applications);
-
-    List<Application> responseDtosToEntities(List<ApplicationResponseDto> dtos);
+    public abstract List<ApplicationResponseDto> entitiesToResponseDtos(List<Application> applications);
+    public abstract List<Application> responseDtosToEntities(List<ApplicationResponseDto> dtos);
 }
