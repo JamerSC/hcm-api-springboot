@@ -18,14 +18,14 @@ public interface ApplicationService {
             LocalDate dateTo,
             Pageable pageable
     );
-    Optional<ApplicationResponseDto> getApplication(Long id);
-    ApplicationResponseDto updateApplicationInformation(Long id, ApplicationUpdateDto dto, Authentication authentication);
-    ApplicationResponseDto initialQualification(Long id, Authentication authentication);
-    ApplicationResponseDto firstInterview(Long id, Authentication authentication);
-    ApplicationResponseDto secondInterview(Long id, Authentication authentication);
-    ApplicationResponseDto contractProposal(Long id, Authentication authentication);
-    ApplicationResponseDto contractSigned(Long id, Authentication authentication);
-    ApplicationResponseDto approveApplication(Long id, Authentication authentication);
-    ApplicationResponseDto rejectApplication(Long id, Authentication authentication);
-    ApplicationResponseDto hireApplication(Long id, Authentication authentication);
+    Optional<ApplicationResponseDto> getApplication(String id);
+    ApplicationResponseDto updateApplicationInformation(String id, ApplicationUpdateDto dto, Authentication authentication);
+    ApplicationResponseDto initialQualification(String id, Authentication authentication);
+    ApplicationResponseDto firstInterview(String id, Authentication authentication);
+    ApplicationResponseDto secondInterview(String id, Authentication authentication);
+    ApplicationResponseDto contractProposal(String id, Authentication authentication);
+    ApplicationResponseDto contractSigned(String id, Authentication authentication);
+    ApplicationResponseDto approveApplication(String id, Authentication authentication);
+    ApplicationResponseDto rejectApplication(String id, Authentication authentication);
+    ApplicationResponseDto hireApplication(String id, Authentication authentication);
 }

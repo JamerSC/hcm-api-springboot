@@ -43,37 +43,29 @@ public class RecruitmentController {
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<ApplicantResponseDto> retrievedApplicants = applicantService.getAllApplicants(
-                search,
-                dateFrom,
-                dateTo,
-                pageable
+                search, dateFrom, dateTo, pageable
         );
-        ApiResponse<Page<ApplicantResponseDto>> response = ApiResponse.<Page<ApplicantResponseDto>>builder()
+        return ResponseEntity.ok(ApiResponse.<Page<ApplicantResponseDto>>builder()
                 .success(true)
                 .message("List of applicants retrieved successfully!")
                 .data(retrievedApplicants)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('VIEW_APPLICANTS')")
     @GetMapping("/{id}/applicant")
-    public ResponseEntity<ApiResponse<Optional<ApplicantResponseDto>>> getApplicant(
-            @PathVariable String id) {
-        Optional<ApplicantResponseDto> retrievedApplicant = applicantService.getApplicant(id);
-        ApiResponse<Optional<ApplicantResponseDto>> response = ApiResponse.<Optional<ApplicantResponseDto>>builder()
+    public ResponseEntity<ApiResponse<Optional<ApplicantResponseDto>>> getApplicant(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.<Optional<ApplicantResponseDto>>builder()
                 .success(true)
                 .message("Applicant retrieved successfully!")
-                .data(retrievedApplicant)
+                .data(applicantService.getApplicant(id))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
-    /*** APPLICATION **/
     @PreAuthorize("hasAuthority('VIEW_APPLICATIONS')")
     @GetMapping("/applications")
     public ResponseEntity<ApiResponse<Page<ApplicationResponseDto>>> getAllApplications(
@@ -83,170 +75,146 @@ public class RecruitmentController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ApplicationResponseDto> retrievedSubmittedApplications = applicationService.getAllApplications(
-                search,
-                status,
-                dateFrom,
-                dateTo,
-                pageable
+        Page<ApplicationResponseDto> retrievedApplications = applicationService.getAllApplications(
+                search, status, dateFrom, dateTo, pageable
         );
-        ApiResponse<Page<ApplicationResponseDto>> response = ApiResponse.<Page<ApplicationResponseDto>>builder()
+        return ResponseEntity.ok(ApiResponse.<Page<ApplicationResponseDto>>builder()
                 .success(true)
                 .message("List of applications retrieved successfully!")
-                .data(retrievedSubmittedApplications)
+                .data(retrievedApplications)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('VIEW_APPLICATIONS')")
     @GetMapping("/{id}/application")
-    public ResponseEntity<ApiResponse<Optional<ApplicationResponseDto>>> getApplication(
-            @PathVariable Long id) {
-        Optional<ApplicationResponseDto> retrievedApplication = applicationService.getApplication(id);
-        ApiResponse<Optional<ApplicationResponseDto>> response = ApiResponse.<Optional<ApplicationResponseDto>>builder()
+    public ResponseEntity<ApiResponse<Optional<ApplicationResponseDto>>> getApplication(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.<Optional<ApplicationResponseDto>>builder()
                 .success(true)
                 .message("Application retrieved successfully!")
-                .data(retrievedApplication)
+                .data(applicationService.getApplication(id))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('UPDATE_APPLICATIONS')")
     @PutMapping("/{id}/update-application")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> updateApplication(
-            @PathVariable Long id, @RequestBody ApplicationUpdateDto dto, Authentication authentication) {
-        ApplicationResponseDto updatedApplication = applicationService.updateApplicationInformation(id, dto, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id,
+            @RequestBody ApplicationUpdateDto dto,
+            Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application updated successfully!")
-                .data(updatedApplication)
+                .data(applicationService.updateApplicationInformation(id, dto, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('APPROVE_APPLICATIONS')")
     @PatchMapping("/{id}/application/approve")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> approveApplication(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.approveApplication(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application status changed to Approved Application!")
-                .data(changedStatus)
+                .data(applicationService.approveApplication(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('REJECT_APPLICATIONS')")
     @PatchMapping("/{id}/application/reject")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> rejectApplication(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.rejectApplication(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application status changed to Rejected Application!")
-                .data(changedStatus)
+                .data(applicationService.rejectApplication(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('INITIAL_QUALIFICATION')")
     @PatchMapping("/{id}/application/initial-qualification")
-    public ResponseEntity<ApiResponse<ApplicationResponseDto> > initialQualification(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.initialQualification(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+    public ResponseEntity<ApiResponse<ApplicationResponseDto>> initialQualification(
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application changed status to Initial Qualification!")
-                .data(changedStatus)
+                .data(applicationService.initialQualification(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('FIRST_INTERVIEW')")
     @PatchMapping("/{id}/application/first-interview")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> firstInterview(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.firstInterview(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application status changed to First Interview!")
-                .data(changedStatus)
+                .data(applicationService.firstInterview(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('SECOND_INTERVIEW')")
     @PatchMapping("/{id}/application/second-interview")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> secondInterview(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.secondInterview(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application status changed to Second Interview!")
-                .data(changedStatus)
+                .data(applicationService.secondInterview(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('CONTRACT_PROPOSAL')")
     @PatchMapping("/{id}/application/contract-proposal")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> contractProposal(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.contractProposal(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application status changed to Contract Proposal!")
-                .data(changedStatus)
+                .data(applicationService.contractProposal(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('CONTRACT_SIGNED')")
     @PatchMapping("/{id}/application/contract-signed")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> contractSigned(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.contractSigned(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application status changed to Contract Signed!")
-                .data(changedStatus)
+                .data(applicationService.contractSigned(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('HIRE_APPLICANTS')")
     @PatchMapping("/{id}/application/hire")
     public ResponseEntity<ApiResponse<ApplicationResponseDto>> hireApplicant(
-            @PathVariable Long id, Authentication authentication) {
-        ApplicationResponseDto changedStatus = applicationService.hireApplication(id, authentication);
-        ApiResponse<ApplicationResponseDto> response = ApiResponse.<ApplicationResponseDto>builder()
+            @PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.<ApplicationResponseDto>builder()
                 .success(true)
                 .message("Application status changed to Hired Applicant!")
-                .data(changedStatus)
+                .data(applicationService.hireApplication(id, authentication))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 }

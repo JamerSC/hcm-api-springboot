@@ -9,16 +9,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApplicationUpdateDto {
-    private Long applicationId;
+    private String applicationId;    // Hash ID
     private String applicantName;
     private String appliedPosition;
     private String description;
@@ -33,7 +31,7 @@ public class ApplicationUpdateDto {
     private String mobile;
     private String linkedInProfile; // link or name text field
     private String degree; // degree table college, associate, masters single selection - cms
-    private Set<String> employees = new HashSet<>(); // arrays of employees
+    private List<String> employees = new ArrayList<>(); // arrays of employees
     private String source; // create source fb, linkedin, single selection - cms
     private Date availability; // date picker
     private Double expectedSalary;
