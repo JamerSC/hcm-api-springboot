@@ -32,7 +32,7 @@ public class DepartmentController {
     }
 
     @PreAuthorize("hasAuthority('VIEW_DEPARTMENTS')")
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<ApiResponse<Page<DepartmentResponseDto>>> getAllDepartments(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
@@ -52,7 +52,7 @@ public class DepartmentController {
     }
 
     @PreAuthorize("hasAuthority('CREATE_DEPARTMENTS')")
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<ApiResponse<DepartmentResponseDto>> createDepartment(
             @Valid @RequestBody DepartmentCreateDto createDto,
             Authentication authentication) {

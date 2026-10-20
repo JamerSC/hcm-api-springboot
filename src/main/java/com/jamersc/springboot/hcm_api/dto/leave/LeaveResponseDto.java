@@ -17,7 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LeaveResponseDto {
-    private Long id;
+    private String id;
     private String employeeFullName;
     private LeaveType leaveType;
     private LocalDate startDate;
