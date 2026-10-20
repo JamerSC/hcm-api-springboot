@@ -19,7 +19,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LeaveDto {
-    private Long id;
+    private String id;
     private Employee employee;
     private LeaveType leaveType;
     private LocalDate startDate;

@@ -21,7 +21,7 @@ public interface LeaveService {
             LocalDate dateTo,
             Pageable pageable
     );
-    Optional<LeaveResponseDto> getLeaveRequest(Long id);
+    Optional<LeaveResponseDto> getLeaveRequest(String id); // Updated to String
     Page<LeaveResponseDto> getMyLeaveRequests(
             String search,
             LeaveType leaveType,
@@ -32,11 +32,10 @@ public interface LeaveService {
             Authentication authentication
     );
     LeaveResponseDto createLeaveRequest(LeaveCreateDto dto, Authentication authentication);
-    LeaveResponseDto cancelLeaveRequest(Long id, Authentication authentication);
-    LeaveResponseDto updateLeaveRequest(Long id, LeaveUpdateDto dto, Authentication authentication);
-    LeaveResponseDto approveLeaveRequest(Long id, Authentication authentication);
-    LeaveResponseDto rejectLeaveRequest(Long id, Authentication authentication);
-    void archiveLeaveRequest(Long id, Authentication authentication);
-    void unarchivedLeaveRequest(Long id, Authentication authentication);
-
+    LeaveResponseDto cancelLeaveRequest(String id, Authentication authentication);
+    LeaveResponseDto updateLeaveRequest(String id, LeaveUpdateDto dto, Authentication authentication);
+    LeaveResponseDto approveLeaveRequest(String id, Authentication authentication);
+    LeaveResponseDto rejectLeaveRequest(String id, Authentication authentication);
+    void archiveLeaveRequest(String id, Authentication authentication);
+    void unarchivedLeaveRequest(String id, Authentication authentication);
 }

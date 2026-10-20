@@ -12,6 +12,7 @@ import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
 import com.jamersc.springboot.hcm_api.repository.LeaveRepository;
 import com.jamersc.springboot.hcm_api.repository.LeaveSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class LeaveServiceImpl implements LeaveService {
     private final LeaveRepository leaveRepository;
     private final UserRepository userRepository;
     private final LeaveMapper leaveMapper;
+    private final HashidService hashidService;
 
     @Override
     public Page<LeaveResponseDto> getAllLeaveRequest(
@@ -48,10 +50,6 @@ public class LeaveServiceImpl implements LeaveService {
             LocalDate dateTo,
             Pageable pageable
     ) {
-        log.debug("Fetching all leave filters: search={}, leave type {}, leave status={}, leave date from {}, leave date to {}, pageable={}",
-                search, leaveType, leaveStatus, dateFrom, dateTo, pageable
-        );
-
         Specification<Leave> spec = Specification.allOf(
                 LeaveSpecification.search(search),
                 LeaveSpecification.hasType(leaveType),
@@ -60,20 +58,14 @@ public class LeaveServiceImpl implements LeaveService {
         );
 
         Page<Leave> leaves = leaveRepository.findAll(spec, pageable);
-
         return leaves.map(leaveMapper::entityToResponseDto);
     }
 
-//    @Override
-//    public Page<LeaveResponseDto> getAllLeaveRequest(Pageable pageable) {
-//        Page<Leave> leaves = leaveRepository.findAll(pageable);
-//        return leaves.map(leaveMapper::entityToResponseDto);
-//    }
-
     @Override
-    public Optional<LeaveResponseDto> getLeaveRequest(Long id) {
-        return Optional.of(leaveRepository.findById(id)
-                .map(leaveMapper::entityToResponseDto))
+    public Optional<LeaveResponseDto> getLeaveRequest(String id) {
+        Long decodedId = hashidService.decode(id);
+        return Optional.of(leaveRepository.findById(decodedId)
+                        .map(leaveMapper::entityToResponseDto))
                 .orElseThrow(()-> new RuntimeException("Leave request not found"));
     }
 
@@ -89,10 +81,6 @@ public class LeaveServiceImpl implements LeaveService {
     ) {
         User currentUser = getUser(authentication);
 
-        log.debug("Fetching all leave filters: current user {}, search={}, leave type {}, leave status={}, leave date from {}, leave date to {}, pageable={}",
-                currentUser, search, leaveType, leaveStatus, dateFrom, dateTo, pageable
-        );
-
         Specification<Leave> spec = Specification.allOf(
                 LeaveSpecification.byEmployee(currentUser.getEmployee()),
                 LeaveSpecification.search(search),
@@ -104,13 +92,6 @@ public class LeaveServiceImpl implements LeaveService {
         Page<Leave> myLeaveRequests = leaveRepository.findAll(spec, pageable);
         return myLeaveRequests.map(leaveMapper::entityToResponseDto);
     }
-
-//    @Override
-//    public Page<LeaveResponseDto> getMyLeaveRequests(Pageable pageable, Authentication authentication) {
-//        User currentUser = getUser(authentication);
-//        Page<Leave> myLeaveRequests = leaveRepository.findByEmployee(pageable, currentUser.getEmployee());
-//        return myLeaveRequests.map(leaveMapper::entityToResponseDto);
-//    }
 
     @Override
     public LeaveResponseDto createLeaveRequest(LeaveCreateDto dto, Authentication authentication) {
@@ -128,34 +109,35 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setUpdatedBy(currentUser);
 
         Leave submitted = leaveRepository.save(leaveRequest);
-
         return leaveMapper.entityToResponseDto(submitted);
     }
 
     @Override
-    public LeaveResponseDto cancelLeaveRequest(Long id, Authentication authentication) {
+    public LeaveResponseDto cancelLeaveRequest(String id, Authentication authentication) {
         User currentUser = getUser(authentication);
-        Leave leave = leaveRepository.findById(id)
+        Long decodedId = hashidService.decode(id);
+
+        Leave leave = leaveRepository.findById(decodedId)
                 .orElseThrow(()->new RuntimeException("Leave not found"));
         leave.setStatus(LeaveStatus.CANCELLED);
         leave.setUpdatedBy(currentUser);
+
         Leave cancelledLeave = leaveRepository.save(leave);
         return leaveMapper.entityToResponseDto(cancelledLeave);
     }
 
     @Override
-    public LeaveResponseDto updateLeaveRequest(Long id, LeaveUpdateDto dto, Authentication authentication) {
+    public LeaveResponseDto updateLeaveRequest(String id, LeaveUpdateDto dto, Authentication authentication) {
         User currentUser = getUser(authentication);
+        Long decodedId = hashidService.decode(id);
 
-        // 1. Find existing leave request
-        Leave leaveRequest = leaveRepository.findById(id)
+        Leave leaveRequest = leaveRepository.findById(decodedId)
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
 
-        // 2. Ensure the logged-in user owns the leave request (optional security check)
         if (!leaveRequest.getEmployee().getId().equals(currentUser.getEmployee().getId())) {
             throw new RuntimeException("You are not allowed to update this leave request");
         }
-        // 3. Update fields
+
         leaveRequest.setLeaveType(dto.getLeaveType());
         leaveRequest.setStartDate(dto.getStartDate());
         leaveRequest.setEndDate(dto.getEndDate());
@@ -163,17 +145,16 @@ public class LeaveServiceImpl implements LeaveService {
         leaveRequest.setUpdatedBy(currentUser);
         leaveRequest.setUpdatedAt(OffsetDateTime.now());
 
-        // 4. Save updated entity
         Leave updated = leaveRepository.save(leaveRequest);
-
         return leaveMapper.entityToResponseDto(updated);
     }
 
     @Override
-    public LeaveResponseDto approveLeaveRequest(Long id, Authentication authentication) {
+    public LeaveResponseDto approveLeaveRequest(String id, Authentication authentication) {
         User currentUser = getUser(authentication);
+        Long decodedId = hashidService.decode(id);
 
-        Leave requestedLeave = leaveRepository.findById(id)
+        Leave requestedLeave = leaveRepository.findById(decodedId)
                 .orElseThrow(() -> new RuntimeException("Leave not found"));
 
         requestedLeave.setStatus(LeaveStatus.APPROVED);
@@ -181,15 +162,15 @@ public class LeaveServiceImpl implements LeaveService {
         requestedLeave.setUpdatedBy(currentUser);
 
         Leave approvedLeave = leaveRepository.save(requestedLeave);
-
         return leaveMapper.entityToResponseDto(approvedLeave);
     }
 
     @Override
-    public LeaveResponseDto rejectLeaveRequest(Long id, Authentication authentication) {
+    public LeaveResponseDto rejectLeaveRequest(String id, Authentication authentication) {
         User currentUser = getUser(authentication);
+        Long decodedId = hashidService.decode(id);
 
-        Leave requestedLeave = leaveRepository.findById(id)
+        Leave requestedLeave = leaveRepository.findById(decodedId)
                 .orElseThrow(() -> new RuntimeException("Leave not found"));
 
         requestedLeave.setStatus(LeaveStatus.REJECTED);
@@ -197,18 +178,19 @@ public class LeaveServiceImpl implements LeaveService {
         requestedLeave.setUpdatedBy(currentUser);
 
         Leave rejectedLeave = leaveRepository.save(requestedLeave);
-
         return leaveMapper.entityToResponseDto(rejectedLeave);
     }
 
     @Override
-    public void archiveLeaveRequest(Long id, Authentication authentication) {
-        leaveRepository.deleteById(id);
+    public void archiveLeaveRequest(String id, Authentication authentication) {
+        Long decodedId = hashidService.decode(id);
+        leaveRepository.deleteById(decodedId);
     }
 
     @Override
-    public void unarchivedLeaveRequest(Long id, Authentication authentication) {
-        //
+    public void unarchivedLeaveRequest(String id, Authentication authentication) {
+        Long decodedId = hashidService.decode(id);
+        // Implement unarchive implementation logic using decodedId
     }
 
     private User getUser(Authentication authentication) {
