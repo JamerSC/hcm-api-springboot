@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface AttendanceService {
 
@@ -18,6 +19,7 @@ public interface AttendanceService {
             LocalDate dateTo,
             Pageable pageable
     );
+
     Page<AttendanceResponseDto> getMyAttendances(
             String search,
             AttendanceStatus status,
@@ -26,6 +28,10 @@ public interface AttendanceService {
             Pageable pageable,
             Authentication authentication
     );
+
+    Optional<AttendanceResponseDto> getAttendance(String id); // Hash ID lookup
+
     AttendanceResponseDto checkIn(Authentication authentication);
+
     AttendanceResponseDto checkOut(Authentication authentication);
 }

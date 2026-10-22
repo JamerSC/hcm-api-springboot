@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/attendances")
@@ -40,20 +41,27 @@ public class AttendanceController {
             @PageableDefault(page = 0, size = 10, sort = "attendanceDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<AttendanceDto> retrievedAttendances = attendanceService.getAllAttendances(
-                search,
-                status,
-                dateFrom,
-                dateTo,
-                pageable
+                search, status, dateFrom, dateTo, pageable
         );
-        ApiResponse<Page<AttendanceDto>> response = ApiResponse.<Page<AttendanceDto>>builder()
+        return ResponseEntity.ok(ApiResponse.<Page<AttendanceDto>>builder()
                 .success(true)
                 .message("List of attendances retrieved successfully!")
                 .data(retrievedAttendances)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
+    }
+
+    @PreAuthorize("hasAuthority('VIEW_ATTENDANCES')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Optional<AttendanceResponseDto>>> getAttendance(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.<Optional<AttendanceResponseDto>>builder()
+                .success(true)
+                .message("Attendance record retrieved successfully!")
+                .data(attendanceService.getAttendance(id))
+                .status(HttpStatus.OK.value())
+                .timestamp(LocalDateTime.now())
+                .build());
     }
 
     @PreAuthorize("hasAuthority('VIEW_MY_ATTENDANCES')")
@@ -67,50 +75,40 @@ public class AttendanceController {
             Authentication authentication
     ) {
         Page<AttendanceResponseDto> retrievedMyAttendances = attendanceService.getMyAttendances(
-                search,
-                status,
-                dateFrom,
-                dateTo,
-                pageable,
-                authentication
+                search, status, dateFrom, dateTo, pageable, authentication
         );
-        ApiResponse<Page<AttendanceResponseDto>> response = ApiResponse.<Page<AttendanceResponseDto>>builder()
+        return ResponseEntity.ok(ApiResponse.<Page<AttendanceResponseDto>>builder()
                 .success(true)
                 .message("List of my attendances retrieved successfully!")
                 .data(retrievedMyAttendances)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('CHECK_IN_ATTENDANCES')")
     @PostMapping("/check-in")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> attendanceCheckIn(Authentication authentication) {
-        AttendanceResponseDto checkedInAttendance = attendanceService
-                .checkIn(authentication);
-        ApiResponse<AttendanceResponseDto> response = ApiResponse.<AttendanceResponseDto>builder()
+        AttendanceResponseDto checkedInAttendance = attendanceService.checkIn(authentication);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<AttendanceResponseDto>builder()
                 .success(true)
                 .message("Attendance checked in successfully!")
                 .data(checkedInAttendance)
                 .status(HttpStatus.CREATED.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 
     @PreAuthorize("hasAuthority('CHECK_OUT_ATTENDANCES')")
     @PatchMapping("/check-out")
     public ResponseEntity<ApiResponse<AttendanceResponseDto>> attendanceCheckOut(Authentication authentication) {
-        AttendanceResponseDto checkedOutAttendance = attendanceService
-                .checkOut(authentication);
-        ApiResponse<AttendanceResponseDto> response = ApiResponse.<AttendanceResponseDto>builder()
+        AttendanceResponseDto checkedOutAttendance = attendanceService.checkOut(authentication);
+        return ResponseEntity.ok(ApiResponse.<AttendanceResponseDto>builder()
                 .success(true)
                 .message("Attendance checked out successfully!")
                 .data(checkedOutAttendance)
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+                .build());
     }
 }
