@@ -10,6 +10,7 @@ import com.jamersc.springboot.hcm_api.repository.AttendanceRepository;
 import com.jamersc.springboot.hcm_api.repository.AttendanceSpecification;
 import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -35,6 +37,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
     private final AttendanceMapper attendanceMapper;
+    private final HashidService hashService;
 
     @Override
     public Page<AttendanceDto> getAllAttendances(
@@ -47,24 +50,15 @@ public class AttendanceServiceImpl implements AttendanceService {
         log.debug("Fetching all attendances filters: search={}, status={}, attendance date from {}, attendance date to {}, pageable={}",
                 search, status, dateFrom, dateTo, pageable);
 
-        Specification<Attendance> spec =
-                Specification.allOf(
-                        AttendanceSpecification.search(search),
-                        AttendanceSpecification.hasStatus(status),
-                        AttendanceSpecification.dateRange(dateFrom, dateTo)
-                );
+        Specification<Attendance> spec = Specification.allOf(
+                AttendanceSpecification.search(search),
+                AttendanceSpecification.hasStatus(status),
+                AttendanceSpecification.dateRange(dateFrom, dateTo)
+        );
 
-        Page<Attendance> attendances = attendanceRepository.findAll(spec, pageable);
-
-        return attendances.map(attendanceMapper::entityToDto);
+        return attendanceRepository.findAll(spec, pageable)
+                .map(attendanceMapper::entityToDto);
     }
-
-    //    @Override
-    //    public Page<AttendanceDto> getAllAttendance(Pageable pageable) {
-    //        Page<Attendance> attendances = attendanceRepository.findAll(pageable);
-    //        return attendances.map(attendanceMapper::entityToDto);
-    //    }
-    //
 
     @Override
     public Page<AttendanceResponseDto> getMyAttendances(
@@ -79,39 +73,29 @@ public class AttendanceServiceImpl implements AttendanceService {
         log.debug("Fetching my attendances filters: currentUser={}, search={}, status={}, attendance date from {}, attendance date to {}, pageable={}",
                 currentUser.getEmployee(), search, status, dateFrom, dateTo, pageable);
 
-        Specification<Attendance> spec =
-                Specification.allOf(
-                        AttendanceSpecification.byEmployee(currentUser.getEmployee()),
-                        AttendanceSpecification.search(search),
-                        AttendanceSpecification.hasStatus(status),
-                        AttendanceSpecification.dateRange(dateFrom, dateTo)
-                );
+        Specification<Attendance> spec = Specification.allOf(
+                AttendanceSpecification.byEmployee(currentUser.getEmployee()),
+                AttendanceSpecification.search(search),
+                AttendanceSpecification.hasStatus(status),
+                AttendanceSpecification.dateRange(dateFrom, dateTo)
+        );
 
-        Page<Attendance> myAttendances = attendanceRepository.findAll(spec, pageable);
-
-        return myAttendances.map(attendanceMapper::entityToResponseDto);
+        return attendanceRepository.findAll(spec, pageable)
+                .map(attendanceMapper::entityToResponseDto);
     }
 
-    //    @Override
-    //    public Page<AttendanceResponseDto> getMyAttendances(Pageable pageable, Authentication authentication) {
-    //        User currentUser = getUser(authentication);
-    //
-    //        Page<Attendance> myAttendances = attendanceRepository.findByEmployee(pageable,currentUser.getEmployee());
-    //
-    //        return myAttendances.map(attendanceMapper::entityToResponseDto);
-    //    }
-
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User nof found"));
+    @Override
+    public Optional<AttendanceResponseDto> getAttendance(String id) {
+        Long rawId = hashService.decode(id);
+        return Optional.of(attendanceRepository.findById(rawId)
+                .map(attendanceMapper::entityToResponseDto)
+                .orElseThrow(() -> new RuntimeException("Attendance record not found with id: " + id)));
     }
 
     @Override
     public AttendanceResponseDto checkIn(Authentication authentication) {
         User currentUser = getUser(authentication);
 
-        // checked if the employee already checked in
         if (attendanceRepository.findByEmployeeAndAttendanceDate(
                 currentUser.getEmployee(), LocalDate.now()).isPresent()) {
             throw new IllegalStateException("Employee has already checked in today");
@@ -126,7 +110,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         newAttendance.setUpdatedBy(currentUser);
 
         Attendance attendanceCheckedIn = attendanceRepository.save(newAttendance);
-
         return attendanceMapper.entityToResponseDto(attendanceCheckedIn);
     }
 
@@ -134,11 +117,10 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceResponseDto checkOut(Authentication authentication) {
         User currentUser = getUser(authentication);
 
-        // find today's attendance record
         Attendance existingAttendance = attendanceRepository.findByEmployeeAndAttendanceDate(
-                currentUser.getEmployee(), LocalDate.now()).orElseThrow(()->new RuntimeException("Employee has not checked in yet today"));
+                        currentUser.getEmployee(), LocalDate.now())
+                .orElseThrow(() -> new RuntimeException("Employee has not checked in yet today"));
 
-        // check if they already checkout
         if (existingAttendance.getCheckOutTime() != null) {
             throw new RuntimeException("Employee has already checked out today");
         }
@@ -147,9 +129,12 @@ public class AttendanceServiceImpl implements AttendanceService {
         existingAttendance.setUpdatedBy(currentUser);
 
         Attendance attendanceCheckedOut = attendanceRepository.save(existingAttendance);
-
         return attendanceMapper.entityToResponseDto(attendanceCheckedOut);
     }
 
-
+    private User getUser(Authentication authentication) {
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 }

@@ -17,7 +17,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AttendanceDto {
-    private Long attendanceId;
+    private String attendanceId;
     private LocalDate attendanceDate;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
@@ -26,7 +26,7 @@ public class AttendanceDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ssXXX")
     private OffsetDateTime checkOutTime;
 
-    private Long employeeId;
+    private String employeeId;
     private String employeeName;
     private String jobTitle;
     private String department;
