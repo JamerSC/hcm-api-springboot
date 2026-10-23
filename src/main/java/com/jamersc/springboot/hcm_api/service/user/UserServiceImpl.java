@@ -11,6 +11,7 @@ import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
 import com.jamersc.springboot.hcm_api.repository.RoleRepository;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import com.jamersc.springboot.hcm_api.repository.UserSpecification;
+import com.jamersc.springboot.hcm_api.service.security.HashidService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,12 +34,12 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmployeeRepository employeeRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final HashidService hashService;
 
     @Override
     public Page<UserResponseDto> getAllUsers(
@@ -48,7 +49,7 @@ public class UserServiceImpl implements UserService {
             LocalDate dateTo,
             Pageable pageable
     ) {
-        log.debug("Fetching all users filters: search={}, active {}, created date from {}, date to {}, pageable={}",
+        log.debug("Fetching all users filters: search={}, active={}, created date from={}, date to={}, pageable={}",
                 search, active, dateFrom, dateTo, pageable);
 
         Specification<User> spec = Specification.allOf(
@@ -57,47 +58,40 @@ public class UserServiceImpl implements UserService {
                 UserSpecification.dateRange(dateFrom, dateTo)
         );
 
-        Page<User> users = userRepository.findAll(spec, pageable);
-
-        return users.map(userMapper::entityToUserResponseDTO);
+        return userRepository.findAll(spec, pageable)
+                .map(userMapper::entityToUserResponseDTO);
     }
 
-//    @Override
-//    public Page<UserResponseDto> getAllUsers(Pageable pageable) {
-//        Page<User> users = userRepository.findAll(pageable);
-//        return users.map(userMapper::entityToUserResponseDTO);
-//    }
-
     @Override
-    public Optional<UserResponseDto> findUser(Long id) {
-        return Optional.of(userRepository.findById(id)
+    public Optional<UserResponseDto> findUser(String id) {
+        Long rawId = hashService.decode(id);
+        return Optional.of(userRepository.findById(rawId)
                 .map(userMapper::entityToUserResponseDTO)
-                .orElseThrow(()-> new RuntimeException("User not found.")));
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id)));
     }
 
     @Override
-    public UserResponseDto createUser(Long employeeId, UserCreateDto createDTO, Authentication authentication) {
-        // fetch employee
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(()-> new RuntimeException("Employee not found"));
+    public UserResponseDto createUser(String employeeId, UserCreateDto createDTO, Authentication authentication) {
+        Long rawEmployeeId = hashService.decode(employeeId);
+
+        Employee employee = employeeRepository.findById(rawEmployeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + employeeId));
 
         if (userRepository.findByEmployeeId(employee.getId()).isPresent()) {
-            throw new IllegalArgumentException("Employee have already an user access. Created date at " + employee.getCreatedAt());
+            throw new IllegalArgumentException("Employee already has user access. Created date at " + employee.getCreatedAt());
         }
 
-        // check current user
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(()-> new RuntimeException("User not found!"));
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
 
-        // check if the username & email is already taken
         if (userRepository.findByUsername(createDTO.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username is already taken.");
         }
 
-//        if (userRepository.findByEmail(employee.getEmail()).isPresent()) {
-//            throw new IllegalArgumentException("Username is already in use.");
-//        }
+        if (userRepository.findByEmail(createDTO.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email is already in use.");
+        }
 
         User newUser = new User();
         newUser.setUsername(createDTO.getUsername());
@@ -107,33 +101,69 @@ public class UserServiceImpl implements UserService {
         newUser.setEmail(createDTO.getEmail());
         newUser.setCreatedBy(currentUser);
         newUser.setUpdatedBy(currentUser);
-
-        // assign link user to employee
         newUser.setEmployee(employee);
 
-        // assign default role
         Role employeeRole = roleRepository.findByRoleName("ROLE_EMPLOYEE")
-                .orElseThrow(()-> new RuntimeException("Role Employee not found"));
+                .orElseThrow(() -> new RuntimeException("Role EMPLOYEE not found"));
         newUser.setRoles(Collections.singleton(employeeRole));
 
-        // save user in database
         User createdUser = userRepository.save(newUser);
-
         return userMapper.entityToUserResponseDTO(createdUser);
     }
 
     @Override
-    public UserResponseDto update(UserDto userDTO, Authentication authentication) {
-        return null;
+    public UserResponseDto update(String id, UserDto userDTO, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        User user = userRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+
+        if (userDTO.getUsername() != null && !userDTO.getUsername().isBlank()) {
+            user.setUsername(userDTO.getUsername());
+        }
+        if (userDTO.getEmail() != null && !userDTO.getEmail().isBlank()) {
+            user.setEmail(userDTO.getEmail());
+        }
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        }
+
+        user.setUpdatedBy(currentUser);
+        User updatedUser = userRepository.save(user);
+
+        return userMapper.entityToUserResponseDTO(updatedUser);
     }
 
     @Override
-    public void archiveUser(Long id, Authentication authentication) {
-        // todo
+    public void archiveUser(String id, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        User user = userRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+
+        user.setActive(false);
+        user.setUpdatedBy(currentUser);
+        userRepository.save(user);
     }
 
     @Override
-    public void unarchivedUser(Long id, Authentication authentication) {
-        // todo
+    public void unarchivedUser(String id, Authentication authentication) {
+        Long rawId = hashService.decode(id);
+        User user = userRepository.findById(rawId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+
+        user.setActive(true);
+        user.setUpdatedBy(currentUser);
+        userRepository.save(user);
     }
 }
