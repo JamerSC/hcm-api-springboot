@@ -19,11 +19,14 @@ public interface UserService {
             LocalDate dateTo,
             Pageable pageable
     );
-    Optional<UserResponseDto> findUser(Long id);
-    UserResponseDto createUser(Long employeeId, UserCreateDto createDTO, Authentication authentication);
-    UserResponseDto update(UserDto userDTO, Authentication authentication);
-    // todo
-    void archiveUser(Long id, Authentication authentication);
-    // todo
-    void unarchivedUser(Long id, Authentication authentication);
+
+    Optional<UserResponseDto> findUser(String id);
+
+    UserResponseDto createUser(String employeeId, UserCreateDto createDTO, Authentication authentication);
+
+    UserResponseDto update(String id, UserDto userDTO, Authentication authentication);
+
+    void archiveUser(String id, Authentication authentication);
+
+    void unarchivedUser(String id, Authentication authentication);
 }
