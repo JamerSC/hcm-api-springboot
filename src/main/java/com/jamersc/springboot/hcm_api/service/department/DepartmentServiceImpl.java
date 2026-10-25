@@ -10,6 +10,7 @@ import com.jamersc.springboot.hcm_api.repository.DepartmentRepository;
 import com.jamersc.springboot.hcm_api.repository.DepartmentSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import com.jamersc.springboot.hcm_api.service.security.HashidService;
+import com.jamersc.springboot.hcm_api.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
     private final DepartmentMapper departmentMapper;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final HashidService hashService;
 
     @Override
@@ -77,7 +78,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public DepartmentResponseDto createDepartment(DepartmentCreateDto dto, Authentication authentication) {
         // get the current user from authentication object
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         // map the dto to entity
         Department department = departmentMapper.createDtoToEntity(dto);
@@ -96,7 +97,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public DepartmentResponseDto updateDepartment(String id, DepartmentPatchDto dto, Authentication authentication) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         Long rawId = hashService.decode(id);
 
         Department department = departmentRepository.findById(rawId)
@@ -123,12 +124,5 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public DepartmentResponseDto unarchivedDepartment(String id, Authentication authentication) {
         return null;
-    }
-
-    // Get user authentication
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found in the database"));
     }
 }

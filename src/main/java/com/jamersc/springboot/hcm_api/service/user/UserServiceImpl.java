@@ -83,9 +83,10 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Employee already has user access. Created date at " + employee.getCreatedAt());
         }
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+//                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+        User currentUser = getUserAuthentication(authentication);
 
         if (userRepository.findByUsername(createDTO.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username is already taken.");
@@ -119,9 +120,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+//                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+        User currentUser = getUserAuthentication(authentication);
 
         if (userDTO.getUsername() != null && !userDTO.getUsername().isBlank()) {
             user.setUsername(userDTO.getUsername());
@@ -145,9 +147,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+//                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+        User currentUser = getUserAuthentication(authentication);
 
         user.setActive(false);
         user.setUpdatedBy(currentUser);
@@ -160,9 +163,11 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+//                .orElseThrow(() -> new RuntimeException("Authenticated user not found!"));
+
+        User currentUser = getUserAuthentication(authentication);
 
         user.setActive(true);
         user.setUpdatedBy(currentUser);

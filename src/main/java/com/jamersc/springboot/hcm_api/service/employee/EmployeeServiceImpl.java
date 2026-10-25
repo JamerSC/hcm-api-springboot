@@ -11,6 +11,7 @@ import com.jamersc.springboot.hcm_api.repository.EmployeeSpecification;
 import com.jamersc.springboot.hcm_api.repository.JobRepository;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import com.jamersc.springboot.hcm_api.service.security.HashidService;
+import com.jamersc.springboot.hcm_api.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final JobRepository jobRepository;
     private final HashidService hashService;
 
@@ -84,14 +85,14 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeProfileDto getMyEmployeeProfile(Authentication authentication) {
-        User userDetails = getUser(authentication);
+        User userDetails = userService.getUserAuthentication(authentication);
         Employee myProfile = employeeRepository.findEmployeeByUsername(userDetails.getUsername());
         return employeeMapper.entityToProfileDto(myProfile);
     }
 
     @Override
     public EmployeeResponseDto createEmployee(EmployeeCreateDto dto, Authentication authentication) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         Long decodedJobId = hashService.decode(dto.getJobId());
         Job job = jobRepository.findById(decodedJobId)
@@ -108,7 +109,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeResponseDto patchEmployee(String id, EmployeePatchDto dto, Authentication authentication) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         Long rawId = hashService.decode(id);
 
         Employee employee = employeeRepository.findById(rawId)
@@ -155,9 +156,4 @@ public class EmployeeServiceImpl implements EmployeeService {
         return null;
     }
 
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
-    }
 }
