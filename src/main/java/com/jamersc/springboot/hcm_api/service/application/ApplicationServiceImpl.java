@@ -6,6 +6,7 @@ import com.jamersc.springboot.hcm_api.entity.*;
 import com.jamersc.springboot.hcm_api.mapper.ApplicationMapper;
 import com.jamersc.springboot.hcm_api.repository.*;
 import com.jamersc.springboot.hcm_api.service.security.HashidService;
+import com.jamersc.springboot.hcm_api.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final ApplicationMapper applicationMapper;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final EmployeeRepository employeeRepository;
     private final JobRepository jobRepository;
     private final HashidService hashService;
@@ -70,7 +71,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Long rawId = hashService.decode(id);
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         if (dto.getEmail() != null) application.setEmail(dto.getEmail());
         if (dto.getPhone() != null) application.setPhone(dto.getPhone());
@@ -99,7 +100,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         application.setStatus(ApplicationStatus.INITIAL_QUALIFICATION);
         application.setUpdatedBy(currentUser);
 
@@ -113,7 +114,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         application.setStatus(ApplicationStatus.FIRST_INTERVIEW);
         application.setUpdatedBy(currentUser);
 
@@ -127,7 +128,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         application.setStatus(ApplicationStatus.SECOND_INTERVIEW);
         application.setUpdatedBy(currentUser);
 
@@ -141,7 +142,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         application.setStatus(ApplicationStatus.CONTRACT_PROPOSAL);
         application.setUpdatedBy(currentUser);
 
@@ -155,7 +156,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         application.setStatus(ApplicationStatus.CONTRACT_SIGNED);
         application.setUpdatedBy(currentUser);
 
@@ -169,7 +170,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         application.setStatus(ApplicationStatus.APPROVED);
         application.setUpdatedBy(currentUser);
 
@@ -183,7 +184,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         application.setStatus(ApplicationStatus.REJECTED);
         application.setUpdatedBy(currentUser);
 
@@ -197,7 +198,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         Application application = applicationRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         if (application.getStatus() != ApplicationStatus.CONTRACT_SIGNED) {
             throw new RuntimeException("Cannot hire applicant. Application status is not 'Contract Signed'.");
@@ -225,11 +226,5 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application hired = applicationRepository.save(application);
         return applicationMapper.entityToApplicationResponseDto(hired);
-    }
-
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found in the database!"));
     }
 }

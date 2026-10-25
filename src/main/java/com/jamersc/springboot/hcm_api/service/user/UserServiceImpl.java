@@ -6,6 +6,7 @@ import com.jamersc.springboot.hcm_api.dto.user.UserResponseDto;
 import com.jamersc.springboot.hcm_api.entity.Employee;
 import com.jamersc.springboot.hcm_api.entity.Role;
 import com.jamersc.springboot.hcm_api.entity.User;
+import com.jamersc.springboot.hcm_api.exception.ResourceNotFoundException;
 import com.jamersc.springboot.hcm_api.mapper.UserMapper;
 import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
 import com.jamersc.springboot.hcm_api.repository.RoleRepository;
@@ -34,6 +35,7 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final EmployeeRepository employeeRepository;
@@ -165,5 +167,17 @@ public class UserServiceImpl implements UserService {
         user.setActive(true);
         user.setUpdatedBy(currentUser);
         userRepository.save(user);
+    }
+
+    @Override
+    public User getUserAuthentication(Authentication authentication) {
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        return userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> {
+                    log.error("Authenticated user not found with username: {}", userDetails.getUsername());
+                    return new ResourceNotFoundException("Authenticated user not found with username: " + userDetails.getUsername());
+                });
     }
 }

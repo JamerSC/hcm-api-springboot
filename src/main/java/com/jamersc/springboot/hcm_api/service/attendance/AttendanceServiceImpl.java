@@ -11,6 +11,7 @@ import com.jamersc.springboot.hcm_api.repository.AttendanceSpecification;
 import com.jamersc.springboot.hcm_api.repository.EmployeeRepository;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import com.jamersc.springboot.hcm_api.service.security.HashidService;
+import com.jamersc.springboot.hcm_api.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ import java.util.Optional;
 public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final AttendanceMapper attendanceMapper;
     private final HashidService hashService;
 
@@ -69,7 +70,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             Pageable pageable,
             Authentication authentication
     ) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         log.debug("Fetching my attendances filters: currentUser={}, search={}, status={}, attendance date from {}, attendance date to {}, pageable={}",
                 currentUser.getEmployee(), search, status, dateFrom, dateTo, pageable);
 
@@ -94,7 +95,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public AttendanceResponseDto checkIn(Authentication authentication) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         if (attendanceRepository.findByEmployeeAndAttendanceDate(
                 currentUser.getEmployee(), LocalDate.now()).isPresent()) {
@@ -115,7 +116,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public AttendanceResponseDto checkOut(Authentication authentication) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         Attendance existingAttendance = attendanceRepository.findByEmployeeAndAttendanceDate(
                         currentUser.getEmployee(), LocalDate.now())
@@ -130,11 +131,5 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         Attendance attendanceCheckedOut = attendanceRepository.save(existingAttendance);
         return attendanceMapper.entityToResponseDto(attendanceCheckedOut);
-    }
-
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
