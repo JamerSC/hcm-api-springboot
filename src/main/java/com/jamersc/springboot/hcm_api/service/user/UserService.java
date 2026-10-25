@@ -3,6 +3,7 @@ package com.jamersc.springboot.hcm_api.service.user;
 import com.jamersc.springboot.hcm_api.dto.user.UserCreateDto;
 import com.jamersc.springboot.hcm_api.dto.user.UserDto;
 import com.jamersc.springboot.hcm_api.dto.user.UserResponseDto;
+import com.jamersc.springboot.hcm_api.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -29,4 +30,6 @@ public interface UserService {
     void archiveUser(String id, Authentication authentication);
 
     void unarchivedUser(String id, Authentication authentication);
+
+    User getUserAuthentication(Authentication authentication);
 }

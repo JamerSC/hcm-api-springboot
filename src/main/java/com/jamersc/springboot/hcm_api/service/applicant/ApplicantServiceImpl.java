@@ -10,6 +10,7 @@ import com.jamersc.springboot.hcm_api.repository.*;
 import com.jamersc.springboot.hcm_api.service.email.EmailService;
 import com.jamersc.springboot.hcm_api.service.file.FileStorageService;
 import com.jamersc.springboot.hcm_api.service.security.HashidService;
+import com.jamersc.springboot.hcm_api.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class ApplicantServiceImpl implements ApplicantService {
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
     private final ApplicantMapper applicantMapper;
     private final ApplicationMapper applicationMapper;
     private final FileStorageService fileStorageService;
@@ -73,14 +75,14 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public ApplicantResponseDto getMyApplicantProfile(Authentication authentication) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
         Applicant myProfile = applicantRepository.findApplicantByUsername(currentUser.getUsername());
         return applicantMapper.entityToResponseDto(myProfile);
     }
 
     @Override
     public ApplicantResponseDto updateMyApplicantProfile(ApplicantProfileDto profileDto, Authentication authentication) {
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         Applicant existingApplicant = applicantRepository.findByApplicantUser(currentUser)
                 .orElseThrow(() -> {
@@ -101,7 +103,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public ApplicantResponseDto uploadResume(MultipartFile file, Authentication authentication) {
-        User applicantUser = getUser(authentication);
+        User applicantUser = userService.getUserAuthentication(authentication);
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
                 .orElseThrow(() -> new RuntimeException("Applicant profile not found for user: " + applicantUser));
 
@@ -120,7 +122,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         Job job = jobRepository.findById(rawJobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
 
-        User applicantUser = getUser(authentication);
+        User applicantUser = userService.getUserAuthentication(authentication);
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
                 .orElseThrow(() -> new RuntimeException("Applicant profile not found!"));
 
@@ -147,7 +149,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public Page<ApplicationResponseDto> getAllApplicantJobsApplied(Pageable pageable, Authentication authentication) {
-        User applicantUser = getUser(authentication);
+        User applicantUser = userService.getUserAuthentication(authentication);
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
                 .orElseThrow(() -> new RuntimeException("Applicant profile not found."));
 
@@ -161,7 +163,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         Application application = applicationRepository.findById(rawApplicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + applicationId));
 
-        User applicantUser = getUser(authentication);
+        User applicantUser = userService.getUserAuthentication(authentication);
         Applicant applicant = applicantRepository.findByApplicantUser(applicantUser)
                 .orElseThrow(() -> new RuntimeException("Applicant profile not found."));
 
@@ -177,7 +179,7 @@ public class ApplicantServiceImpl implements ApplicantService {
         Application application = applicationRepository.findById(rawApplicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found with id: " + applicationId));
 
-        User applicantUser = getUser(authentication);
+        User applicantUser = userService.getUserAuthentication(authentication);
 
         application.setStatus(ApplicationStatus.WITHDRAWN);
         application.setUpdatedBy(applicantUser);
@@ -188,7 +190,7 @@ public class ApplicantServiceImpl implements ApplicantService {
 
     @Override
     public void deleteApplicantAccount(Authentication authentication) {
-        User userDetails = getUser(authentication);
+        User userDetails = userService.getUserAuthentication(authentication);
         User userToDelete = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
 
@@ -199,11 +201,5 @@ public class ApplicantServiceImpl implements ApplicantService {
         applicationRepository.deleteAll(applications);
 
         userRepository.delete(userToDelete);
-    }
-
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
     }
 }
