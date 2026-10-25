@@ -14,6 +14,7 @@ import com.jamersc.springboot.hcm_api.repository.JobRepository;
 import com.jamersc.springboot.hcm_api.repository.JobSpecification;
 import com.jamersc.springboot.hcm_api.repository.UserRepository;
 import com.jamersc.springboot.hcm_api.service.security.HashidService;
+import com.jamersc.springboot.hcm_api.service.user.UserService;
 import com.jamersc.springboot.hcm_api.service.user.UserServiceImpl;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ import java.util.Optional;
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final JobMapper jobMapper;
     private final DepartmentRepository departmentRepository;
     private final HashidService hashService;
@@ -94,7 +95,7 @@ public class JobServiceImpl implements JobService {
         Department department = departmentRepository.findById(rawDeptId)
                 .orElseThrow(() -> new RuntimeException("Department not found with id: " + dto.getDepartmentId()));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         Job job = jobMapper.jobCreateDtoToEntity(dto);
         job.setDepartment(department);
@@ -112,7 +113,7 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         job.setStatus(JobStatus.OPEN);
         job.setPostedBy(currentUser);
@@ -129,7 +130,7 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
             job.setTitle(dto.getTitle());
@@ -162,7 +163,7 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         job.setStatus(JobStatus.FILLED);
         job.setPostedBy(null);
@@ -178,7 +179,7 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(rawId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + id));
 
-        User currentUser = getUser(authentication);
+        User currentUser = userService.getUserAuthentication(authentication);
 
         job.setStatus(JobStatus.CLOSED);
         job.setPostedBy(null);
@@ -197,11 +198,5 @@ public class JobServiceImpl implements JobService {
     @Override
     public void unarchivedJob(String id, Authentication authentication) {
         // Implementation for unarchiving if soft delete is used
-    }
-
-    private User getUser(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found."));
     }
 }
